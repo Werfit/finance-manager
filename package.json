@@ -12,6 +12,7 @@
     "schema:pull": "drizzle-kit pull",
     "schema:generate": "drizzle-kit generate",
     "schema:migrate": "drizzle-kit migrate",
+    "schema:push": "drizzle-kit push",
     "schema": "drizzle-kit"
   },
   "dependencies": {
