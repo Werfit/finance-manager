@@ -1,4 +1,5 @@
-from fastapi import FastAPI
+
+from flask import Flask, request
 import pickle
 import pandas as pd
 from pydantic import BaseModel
@@ -8,7 +9,7 @@ from typing import List
 with open("./api/models/lbm_expense_forecaster.pkl", "rb") as f:
     model, encoder, scaler = pickle.load(f)
 
-app = FastAPI()
+app = Flask(__name__)
 
 # Формат запиту
 class CategoryData(BaseModel):
@@ -22,29 +23,33 @@ class CategoryData(BaseModel):
 class PredictionRequest(BaseModel):
     categories: List[CategoryData]
 
-@app.post("/predict")
-def predict_expense(data: PredictionRequest):
+@app.route("/predict", methods=['POST'])
+def predict_expense():
+    data: PredictionRequest = request.get_json()
+    print(data)
     predictions = []
 
-    for category_data in data.categories:
+    for category_data in data.get("categories"):
         # Перетворення категорії
-        category_encoded = encoder.transform([category_data.category_name])[0]
+        category_encoded = encoder.transform([category_data.get('category_name')])[0]
 
         # Масштабування
-        features = pd.DataFrame([[category_data.month_number, category_data.year, category_data.last_month_spent,
-                                  category_data.rolling_mean, category_encoded]],
+        features = pd.DataFrame([[category_data.get('month_number'), category_data.get('year'), category_data.get('last_month_spent'),
+                                  category_data.get('rolling_mean'), category_encoded]],
                                 columns=["month_number", "year", "last_month_spent", "rolling_mean", "category_encoded"])
         features[["last_month_spent", "rolling_mean"]] = scaler.transform(features[["last_month_spent", "rolling_mean"]])
 
         # Прогноз
         prediction = model.predict(features)[0]
         predictions.append({
-            "category_id": category_data.category_id,
-            "category_name": category_data.category_name,
-            "last_month_spent": category_data.last_month_spent,
-            "rolling_mean": category_data.rolling_mean,
+            "category_id": category_data.get('category_id'),
+            "category_name": category_data.get('category_name'),
+            "last_month_spent": category_data.get('last_month_spent'),
+            "rolling_mean": category_data.get('rolling_mean'),
             "predicted_expense": prediction
         })
 
     return {"predictions": predictions}
 
+if __name__ == '__main__':
+    app.run(port=8000)

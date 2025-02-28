@@ -1,0 +1,4 @@
+Name,Format,Type
+id,uuid,string
+name,text,string
+created_at,timestamp without time zone,string

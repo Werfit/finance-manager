@@ -1,0 +1,6 @@
+Name,Format,Type
+id,uuid,string
+amount,numeric,number
+sheet_id,uuid,string
+category_id,uuid,string
+created_at,timestamp without time zone,string
