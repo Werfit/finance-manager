@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 
 import { getSheetRecordsWithCategoriesQuery } from "@/libs/db/queries/records/record.queries";
 import { Category, Record as UserRecord, Sheet } from "@/libs/db/schema";
+import { serverEnvironment } from "@/shared/environment/server.environment";
 import { ActionResponse } from "@/shared/types/action.type";
 
 type ProcessedCategory = Category & {
@@ -21,7 +22,7 @@ const fetchPredictions = async (
   const nextMonth = new Date();
   nextMonth.setMonth(nextMonth.getMonth() + 1);
 
-  const response = await fetch("http://localhost:8000/predict", {
+  const response = await fetch(serverEnvironment.API_URL, {
     method: "POST",
     headers: {
       "Content-type": "application/json",

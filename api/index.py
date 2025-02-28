@@ -1,3 +1,7 @@
+try:
+  import unzip_requirements
+except ImportError:
+  pass
 
 from flask import Flask, request
 import pickle
@@ -6,7 +10,7 @@ from pydantic import BaseModel
 from typing import List
 
 # Завантаження моделі
-with open("./api/models/lbm_expense_forecaster.pkl", "rb") as f:
+with open("models/lbm_expense_forecaster.pkl", "rb") as f:
     model, encoder, scaler = pickle.load(f)
 
 app = Flask(__name__)
@@ -51,5 +55,6 @@ def predict_expense():
 
     return {"predictions": predictions}
 
+
 if __name__ == '__main__':
-    app.run(port=8000)
+   app.run(port=8000)
