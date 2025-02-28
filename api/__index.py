@@ -1,11 +1,12 @@
 from fastapi import FastAPI
+import uvicorn
 import pickle
 import pandas as pd
 from pydantic import BaseModel
 from typing import List
 
 # Завантаження моделі
-with open("./api/models/lbm_expense_forecaster.pkl", "rb") as f:
+with open("models/lbm_expense_forecaster.pkl", "rb") as f:
     model, encoder, scaler = pickle.load(f)
 
 app = FastAPI()
@@ -48,3 +49,5 @@ def predict_expense(data: PredictionRequest):
 
     return {"predictions": predictions}
 
+if __name__ == "__main__":
+    uvicorn.run(app, host="0.0.0.0", port=8000)

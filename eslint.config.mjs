@@ -1,0 +1,36 @@
+import { FlatCompat } from "@eslint/eslintrc";
+import prettierPluginRecommended from "eslint-plugin-prettier/recommended";
+import simpleSortPlugin from "eslint-plugin-simple-import-sort";
+import queryPlugin from "@tanstack/eslint-plugin-query";
+import { dirname } from "path";
+import { fileURLToPath } from "url";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+
+const compat = new FlatCompat({
+  baseDirectory: __dirname,
+});
+
+/**
+ * @type {import('eslint').Linter.Config[]}
+ */
+const eslintConfig = [
+  ...compat.extends("next/core-web-vitals", "next/typescript"),
+  {
+    ...prettierPluginRecommended,
+  },
+  {
+    plugins: {
+      "simple-import-sort": simpleSortPlugin,
+      query: queryPlugin,
+    },
+    rules: {
+      "simple-import-sort/imports": "error",
+      "simple-import-sort/exports": "error",
+    },
+    ignorePatterns: ["migrations/**/*"],
+  },
+];
+
+export default eslintConfig;
