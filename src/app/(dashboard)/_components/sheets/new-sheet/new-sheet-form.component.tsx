@@ -1,21 +1,21 @@
-import {
-  createSheetSchema,
-  CreateSheetSchema,
-} from "@/shared/schemas/sheet.schema";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
+
+import { LoadingButton } from "@/components/loading-button.component";
 import {
   Form,
+  FormControl,
   FormField,
   FormItem,
   FormLabel,
-  FormControl,
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-
-import { createSheetMutation } from "@/libs/query/queries/sheets.queries";
-import { LoadingButton } from "@/components/loading-button.component";
+import { useCreateSheetMutation } from "@/libs/query/queries/sheets.queries";
+import {
+  CreateSheetSchema,
+  createSheetSchema,
+} from "@/shared/schemas/sheet.schema";
 
 type NewSheetFormProps = {
   onSubmit?: () => void;
@@ -29,7 +29,7 @@ export const NewSheetForm: React.FC<NewSheetFormProps> = ({ onSubmit }) => {
     },
   });
 
-  const { mutate: createSheet, isPending } = createSheetMutation(onSubmit);
+  const { mutate: createSheet, isPending } = useCreateSheetMutation(onSubmit);
 
   return (
     <Form {...form}>

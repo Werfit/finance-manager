@@ -4,15 +4,15 @@ import {
   QueryClient,
 } from "@tanstack/react-query";
 
-import { Dashboard } from "./_components/dashboard/dashboard.component";
 import {
   getSheetRecordsQuery,
   getTotalAmountQuery,
 } from "@/libs/query/queries/records.queries";
-import { SheetNavigation } from "./_components/navigation/sheet-navigation.component";
-
-import { PageProps } from "@/shared/types/layout.type";
 import { getSheetOptions } from "@/libs/query/queries/sheets.queries";
+import { PageProps } from "@/shared/types/layout.type";
+
+import { Dashboard } from "./_components/dashboard/dashboard.component";
+import { SheetNavigation } from "./_components/navigation/sheet-navigation.component";
 
 const Page: React.FC<PageProps<{ id: string }>> = async ({ params }) => {
   const { id } = await params;

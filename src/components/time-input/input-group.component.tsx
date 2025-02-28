@@ -5,8 +5,10 @@ import {
   useRef,
   useState,
 } from "react";
-import { DigitInput } from "./digit-input.component";
+
 import { cn } from "@/shared/utils/cn.util";
+
+import { DigitInput } from "./digit-input.component";
 
 type InputGroupProps = {
   max: number;
@@ -46,6 +48,7 @@ export const InputGroup = forwardRef<InputGroupRef, InputGroupProps>(
           secondInput.current?.focus();
         }
       },
+      // eslint-disable-next-line react-hooks/exhaustive-deps
       [setValue, value]
     );
 
@@ -92,3 +95,5 @@ export const InputGroup = forwardRef<InputGroupRef, InputGroupProps>(
     );
   }
 );
+
+InputGroup.displayName = "Input Group";

@@ -1,5 +1,7 @@
-import { getCategories } from "@/app/actions/categories.actions";
 import { queryOptions } from "@tanstack/react-query";
+
+import { getCategories } from "@/app/actions/categories.actions";
+
 import { CategoriesQueryKeys } from "../constants/keys.constants";
 
 export const getCategoriesOptions = () =>

@@ -1,5 +1,7 @@
 "use server";
 
+import { revalidatePath } from "next/cache";
+
 import {
   createRecordQuery,
   getSheetRecordsQuery,
@@ -11,7 +13,6 @@ import { Record, Sheet } from "@/libs/db/schema";
 import { getServerUser } from "@/libs/supabase/utils/getServerUser.util";
 import { CreateRecordSchema } from "@/shared/schemas/record.schema";
 import { ActionResponse } from "@/shared/types/action.type";
-import { revalidatePath } from "next/cache";
 
 export const getTotalAmount = async (
   sheetId: Sheet["id"]

@@ -1,9 +1,10 @@
 "use server";
 
-import { getSheetRecordsWithCategoriesQuery } from "@/libs/db/queries/records/record.queries";
-import { Category, Sheet, Record as UserRecord } from "@/libs/db/schema";
-import { ActionResponse } from "@/shared/types/action.type";
 import { notFound } from "next/navigation";
+
+import { getSheetRecordsWithCategoriesQuery } from "@/libs/db/queries/records/record.queries";
+import { Category, Record as UserRecord, Sheet } from "@/libs/db/schema";
+import { ActionResponse } from "@/shared/types/action.type";
 
 type ProcessedCategory = Category & {
   rollingMean: number;

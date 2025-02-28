@@ -1,8 +1,9 @@
 "use client";
 
-import { forwardRef, useImperativeHandle, useRef } from "react";
-import { Button } from "./ui/button";
 import { FileIcon, UploadIcon } from "lucide-react";
+import { forwardRef, useImperativeHandle, useRef } from "react";
+
+import { Button } from "./ui/button";
 
 type FileInputProps = {
   value?: File;
@@ -57,3 +58,5 @@ export const FileInput = forwardRef<HTMLInputElement, FileInputProps>(
     );
   }
 );
+
+FileInput.displayName = "FileInput";

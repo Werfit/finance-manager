@@ -1,5 +1,5 @@
 import { FlatCompat } from "@eslint/eslintrc";
-import prettierPluginRecommended from "eslint-plugin-prettier/recommended";
+
 import simpleSortPlugin from "eslint-plugin-simple-import-sort";
 import queryPlugin from "@tanstack/eslint-plugin-query";
 import { dirname } from "path";
@@ -17,9 +17,7 @@ const compat = new FlatCompat({
  */
 const eslintConfig = [
   ...compat.extends("next/core-web-vitals", "next/typescript"),
-  {
-    ...prettierPluginRecommended,
-  },
+
   {
     plugins: {
       "simple-import-sort": simpleSortPlugin,
@@ -28,8 +26,21 @@ const eslintConfig = [
     rules: {
       "simple-import-sort/imports": "error",
       "simple-import-sort/exports": "error",
+
+      "@typescript-eslint/no-unused-vars": [
+        "error",
+        {
+          args: "all",
+          argsIgnorePattern: "^_",
+          caughtErrors: "all",
+          caughtErrorsIgnorePattern: "^_",
+          destructuredArrayIgnorePattern: "^_",
+          varsIgnorePattern: "^_",
+          ignoreRestSiblings: true,
+        },
+      ],
     },
-    ignorePatterns: ["migrations/**/*"],
+    ignores: ["migrations/**/*"],
   },
 ];
 

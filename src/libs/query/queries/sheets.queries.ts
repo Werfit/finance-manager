@@ -1,12 +1,14 @@
-import { createSheet, getSheet, getSheets } from "@/app/actions/sheets.actions";
-import { useToast } from "@/hooks/use-toast.hook";
-import { Sheet } from "@/libs/db/schema";
-import { CreateSheetSchema } from "@/shared/schemas/sheet.schema";
 import {
   queryOptions,
   useMutation,
   useQueryClient,
 } from "@tanstack/react-query";
+
+import { createSheet, getSheet, getSheets } from "@/app/actions/sheets.actions";
+import { useToast } from "@/hooks/use-toast.hook";
+import { Sheet } from "@/libs/db/schema";
+import { CreateSheetSchema } from "@/shared/schemas/sheet.schema";
+
 import { SheetsQueryKeys } from "../constants/keys.constants";
 
 export const getSheetsOptions = queryOptions({
@@ -36,7 +38,7 @@ export const getSheetOptions = (sheetId: Sheet["id"]) =>
     },
   });
 
-export const createSheetMutation = (onSuccess?: () => void) => {
+export const useCreateSheetMutation = (onSuccess?: () => void) => {
   const queryClient = useQueryClient();
   const { toast } = useToast();
 

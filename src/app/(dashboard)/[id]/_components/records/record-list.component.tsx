@@ -1,5 +1,6 @@
-import { Record } from "./record.component";
 import { RecordWithCategory } from "@/libs/db/queries/records/record.types";
+
+import { Record } from "./record.component";
 
 type RecordListProps = {
   records: RecordWithCategory[];

@@ -1,11 +1,12 @@
 "use client";
 
+import { InfiniteData } from "@tanstack/react-query";
+import { useMemo } from "react";
+
 import {
   RecordsList,
   RecordWithCategory,
 } from "@/libs/db/queries/records/record.types";
-import { InfiniteData } from "@tanstack/react-query";
-import { useMemo } from "react";
 
 export type DateRecordsGroup = {
   date: string;

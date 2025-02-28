@@ -1,5 +1,7 @@
 "use client";
 
+import { useQuery } from "@tanstack/react-query";
+
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   Table,
@@ -9,12 +11,9 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-
 import { Sheet } from "@/libs/db/schema";
 import { getPredictionOptions } from "@/libs/query/queries/statistics.queries";
-
 import { formatCurrency } from "@/shared/utils/number.util";
-import { useQuery } from "@tanstack/react-query";
 
 type CategoriesTableProps = {
   sheetId: Sheet["id"];

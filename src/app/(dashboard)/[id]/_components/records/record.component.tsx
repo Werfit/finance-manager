@@ -1,4 +1,3 @@
-import { Badge } from "@/components/badge.component";
 import { RecordWithCategory } from "@/libs/db/queries/records/record.types";
 import { cn } from "@/shared/utils/cn.util";
 import { formatCurrency } from "@/shared/utils/number.util";

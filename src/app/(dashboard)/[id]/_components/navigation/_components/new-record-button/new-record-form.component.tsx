@@ -1,26 +1,27 @@
 "use client";
 
+import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 
-import {
-  CreateRecordSchema,
-  createRecordSchema,
-} from "@/shared/schemas/record.schema";
-import { zodResolver } from "@hookform/resolvers/zod";
+import { CalendarInput } from "@/components/calendar-input.component";
+import { LoadingButton } from "@/components/loading-button.component";
+import { TimeInput } from "@/components/time-input.component";
 import {
   FormControl,
   FormField,
-  FormLabel,
   FormItem,
+  FormLabel,
   FormMessage,
 } from "@/components/ui/form";
 import { Form } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { CategoryInput } from "../../../category-input/category-input.component";
 import { useCreateRecordMutation } from "@/libs/query/queries/records.queries";
-import { LoadingButton } from "@/components/loading-button.component";
-import { CalendarInput } from "@/components/calendar-input.component";
-import { TimeInput } from "@/components/time-input.component";
+import {
+  CreateRecordSchema,
+  createRecordSchema,
+} from "@/shared/schemas/record.schema";
+
+import { CategoryInput } from "../../../category-input/category-input.component";
 
 type NewRecordFormProps = {
   onSubmit?: () => void;

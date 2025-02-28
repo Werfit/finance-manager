@@ -1,7 +1,8 @@
 import { dehydrate, HydrationBoundary } from "@tanstack/react-query";
+import { QueryClient } from "@tanstack/react-query";
 
 import { getSheetsOptions } from "@/libs/query/queries/sheets.queries";
-import { QueryClient } from "@tanstack/react-query";
+
 import { Navigation } from "./_components/navigation.component";
 import { SheetList } from "./_components/sheets/sheet-list.component";
 

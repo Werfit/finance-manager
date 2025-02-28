@@ -1,5 +1,8 @@
 "use client";
 
+import { Plus } from "lucide-react";
+import { useState } from "react";
+
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -9,10 +12,9 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { Plus } from "lucide-react";
-import { NewRecordForm } from "./new-record-form.component";
-import { useState } from "react";
 import { Sheet } from "@/libs/db/schema";
+
+import { NewRecordForm } from "./new-record-form.component";
 
 type NewRecordButtonProps = {
   sheetId: Sheet["id"];

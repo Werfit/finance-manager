@@ -1,9 +1,11 @@
-import { Navigation } from "@/app/(dashboard)/_components/navigation.component";
-import { Button } from "@/components/ui/button";
 import { ChevronLeftIcon } from "lucide-react";
 import Link from "next/link";
-import { SheetTitle } from "../../_components/navigation/_components/sheet-title.component";
+
+import { Navigation } from "@/app/(dashboard)/_components/navigation.component";
+import { Button } from "@/components/ui/button";
 import { Sheet } from "@/libs/db/schema";
+
+import { SheetTitle } from "../../_components/navigation/_components/sheet-title.component";
 
 type StatisticsNavigationProps = {
   sheetId: Sheet["id"];

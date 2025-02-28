@@ -1,8 +1,9 @@
+import { useQuery } from "@tanstack/react-query";
+
 import { Sheet } from "@/libs/db/schema";
 import { getTotalAmountQuery } from "@/libs/query/queries/records.queries";
 import { cn } from "@/shared/utils/cn.util";
 import { formatCurrency } from "@/shared/utils/number.util";
-import { useQuery } from "@tanstack/react-query";
 
 type IncomeWidgetProps = {
   sheetId: Sheet["id"];

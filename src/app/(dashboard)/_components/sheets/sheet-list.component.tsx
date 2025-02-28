@@ -1,10 +1,12 @@
 "use client";
 
+import { useQuery } from "@tanstack/react-query";
+
 import { Skeleton } from "@/components/ui/skeleton";
 import { getSheetsOptions } from "@/libs/query/queries/sheets.queries";
-import { useQuery } from "@tanstack/react-query";
-import { SheetCard } from "./sheet-card.component";
+
 import { NewSheetButton } from "./new-sheet/new-sheet-button.component";
+import { SheetCard } from "./sheet-card.component";
 
 export const SheetList = () => {
   const { data: sheets, isPending } = useQuery(getSheetsOptions);

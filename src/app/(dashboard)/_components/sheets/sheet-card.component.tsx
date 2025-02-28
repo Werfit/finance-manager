@@ -1,3 +1,6 @@
+import { ChevronRightIcon } from "lucide-react";
+import Link from "next/link";
+
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -8,8 +11,6 @@ import {
 } from "@/components/ui/card";
 import { SheetWithRecordsAmount } from "@/libs/db/queries/sheets/sheet.types";
 import { formatDate } from "@/shared/utils/date.util";
-import { ChevronRightIcon } from "lucide-react";
-import Link from "next/link";
 
 type SheetCardProps = {
   sheet: SheetWithRecordsAmount;

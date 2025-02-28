@@ -1,14 +1,7 @@
 "use client";
 
 import { useCallback, useRef } from "react";
-import { DigitInput } from "./time-input/digit-input.component";
-import { Input } from "./ui/input";
-import {
-  InputOTP,
-  InputOTPSeparator,
-  InputOTPGroup,
-  InputOTPSlot,
-} from "./ui/input-otp";
+
 import { InputGroup, InputGroupRef } from "./time-input/input-group.component";
 
 type TimeInputProps = {
@@ -38,6 +31,7 @@ export const TimeInput: React.FC<TimeInputProps> = ({ value, onChange }) => {
       newDate.setHours(parseInt(hours_.join("")));
       onChange(newDate);
     },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     [onChange, hours]
   );
 
@@ -50,6 +44,7 @@ export const TimeInput: React.FC<TimeInputProps> = ({ value, onChange }) => {
       newDate.setMinutes(parseInt(minutes_.join("")));
       onChange(newDate);
     },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     [onChange, minutes]
   );
 

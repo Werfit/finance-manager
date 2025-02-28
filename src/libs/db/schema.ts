@@ -1,6 +1,7 @@
 import { text, timestamp, uuid } from "drizzle-orm/pg-core";
 import { pgTable } from "drizzle-orm/pg-core";
 import { authUsers } from "drizzle-orm/supabase";
+
 import { float } from "./types/float.type";
 
 const usersTable = authUsers;

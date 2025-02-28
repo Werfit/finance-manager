@@ -1,12 +1,6 @@
-import {
-  ChangeEvent,
-  forwardRef,
-  useCallback,
-  useImperativeHandle,
-  useRef,
-} from "react";
+import { ChangeEvent, forwardRef, useCallback, useRef } from "react";
+
 import { Input } from "../ui/input";
-import { cn } from "@/shared/utils/cn.util";
 
 type DigitInputProps = Omit<
   React.ComponentProps<typeof Input>,
@@ -26,6 +20,7 @@ export const DigitInput = forwardRef<HTMLInputElement, DigitInputProps>(
         previousValue.current = value.toString();
         onChange(value, event);
       },
+      // eslint-disable-next-line react-hooks/exhaustive-deps
       [min, onChange]
     );
 
@@ -59,3 +54,5 @@ export const DigitInput = forwardRef<HTMLInputElement, DigitInputProps>(
     );
   }
 );
+
+DigitInput.displayName = "Digit Input";

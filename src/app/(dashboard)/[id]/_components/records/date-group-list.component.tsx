@@ -1,8 +1,9 @@
+import { Badge } from "@/components/badge.component";
 import { DateRecordsGroup } from "@/hooks/use-grouped-records.hook";
 import { formatDate } from "@/shared/utils/date.util";
-import { RecordList } from "./record-list.component";
-import { Badge } from "@/components/badge.component";
 import { formatCurrency } from "@/shared/utils/number.util";
+
+import { RecordList } from "./record-list.component";
 
 type DateGroupListProps = {
   groups: DateRecordsGroup[];

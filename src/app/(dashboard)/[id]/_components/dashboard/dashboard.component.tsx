@@ -1,13 +1,15 @@
 "use client";
 
-import { DateGroupList } from "../records/date-group-list.component";
-import { IncomeWidget } from "../widgets/income-widget.component";
-import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
-import { useGroupedRecords } from "@/hooks/use-grouped-records.hook";
-import { getSheetRecordsQuery } from "@/libs/query/queries/records.queries";
-import { DashboardSkeleton } from "./dashboard-skeleton.component";
+import { useInfiniteQuery } from "@tanstack/react-query";
+
 import { ErrorDisplay } from "@/components/error-display.component";
 import { LoadingButton } from "@/components/loading-button.component";
+import { useGroupedRecords } from "@/hooks/use-grouped-records.hook";
+import { getSheetRecordsQuery } from "@/libs/query/queries/records.queries";
+
+import { DateGroupList } from "../records/date-group-list.component";
+import { IncomeWidget } from "../widgets/income-widget.component";
+import { DashboardSkeleton } from "./dashboard-skeleton.component";
 
 type DashboardProps = {
   sheetId: string;

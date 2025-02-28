@@ -1,6 +1,7 @@
+import { useQuery } from "@tanstack/react-query";
+
 import { Typeahead } from "@/components/typeahead.component";
 import { getCategoriesOptions } from "@/libs/query/queries/categories.queries";
-import { useQuery } from "@tanstack/react-query";
 
 type CategoryInputProps = Omit<
   React.ComponentProps<typeof Typeahead>,

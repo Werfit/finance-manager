@@ -1,8 +1,8 @@
 "use server";
 
 import { getCategoriesQuery } from "@/libs/db/queries/categories/categories.queries";
-import { ActionResponse } from "@/shared/types/action.type";
 import { CategoryList } from "@/libs/db/queries/categories/categories.types";
+import { ActionResponse } from "@/shared/types/action.type";
 
 export const getCategories = async (): Promise<
   ActionResponse<CategoryList>

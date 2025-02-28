@@ -1,17 +1,18 @@
 "use client";
 
+import { PlusIcon } from "lucide-react";
+import { useState } from "react";
+
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
   DialogDescription,
-  DialogFooter,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { PlusIcon } from "lucide-react";
-import { useState } from "react";
+
 import { NewSheetForm } from "./new-sheet-form.component";
 
 export const NewSheetButton = () => {

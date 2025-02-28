@@ -1,12 +1,12 @@
-import { Button } from "@/components/ui/button";
-
 import { ChevronLeftIcon } from "lucide-react";
+import Link from "next/link";
+
+import { Navigation } from "@/app/(dashboard)/_components/navigation.component";
+import { Button } from "@/components/ui/button";
 import { Sheet } from "@/libs/db/schema";
 
 import { SheetTitle } from "./_components/sheet-title.component";
-import { Navigation } from "@/app/(dashboard)/_components/navigation.component";
 import { SheetToolbar } from "./_components/sheet-toolbar.component";
-import Link from "next/link";
 
 type SheetNavigationProps = {
   sheetId: Sheet["id"];

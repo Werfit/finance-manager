@@ -1,9 +1,10 @@
 "use client";
 
+import { useQuery } from "@tanstack/react-query";
+
 import { Skeleton } from "@/components/ui/skeleton";
 import { Sheet } from "@/libs/db/schema";
 import { getSheetOptions } from "@/libs/query/queries/sheets.queries";
-import { useQuery } from "@tanstack/react-query";
 
 type SheetTitleProps = {
   sheetId: Sheet["id"];
