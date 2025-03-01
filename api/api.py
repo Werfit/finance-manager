@@ -1,3 +1,5 @@
+import pandas as pd
+
 try:
   import unzip_requirements
 except ImportError:
@@ -5,12 +7,11 @@ except ImportError:
 
 from flask import Flask, request
 import pickle
-import pandas as pd
 from pydantic import BaseModel
 from typing import List
 
 # Завантаження моделі
-with open("models/lbm_expense_forecaster.pkl", "rb") as f:
+with open("./models/lbm_expense_forecaster.pkl", "rb") as f:
     model, encoder, scaler = pickle.load(f)
 
 app = Flask(__name__)
