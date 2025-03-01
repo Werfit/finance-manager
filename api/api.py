@@ -1,9 +1,5 @@
 import pandas as pd
 
-try:
-  import unzip_requirements
-except ImportError:
-  pass
 
 from flask import Flask, request
 import pickle
