@@ -41,3 +41,9 @@ If everything's okay and ports **3000** and **8000** are free, you can open the 
 ## Documentation & Thoughts
 
 Everything related to models will be inside corresponding folders readme.
+
+### TODO
+
+- [ ] Add category details
+- [ ] Month, Quarter, Year
+- [ ] Transactions Random Generator: categories selection, expense/income range

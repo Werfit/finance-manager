@@ -29,6 +29,13 @@
       "when": 1740208845089,
       "tag": "0004_absent_vulcan",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1741529232000,
+      "tag": "0005_abandoned_johnny_storm",
+      "breakpoints": true
     }
   ]
 }

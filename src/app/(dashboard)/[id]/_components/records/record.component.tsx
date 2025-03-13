@@ -1,4 +1,5 @@
 import { RecordWithCategory } from "@/libs/db/queries/records/record.types";
+import { CategoryType } from "@/libs/db/shared/enums";
 import { cn } from "@/shared/utils/cn.util";
 import { formatCurrency } from "@/shared/utils/number.util";
 
@@ -22,7 +23,7 @@ export const Record: React.FC<RecordProps> = ({ data, className }) => {
       <span
         className={cn(
           "text-sm font-medium",
-          data.amount > 0 && "text-green-600"
+          data.category?.type === CategoryType.INCOME && "text-green-600"
         )}
       >
         {formatCurrency(data.amount)}

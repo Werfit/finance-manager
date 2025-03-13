@@ -1,11 +1,14 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
+import { CalendarIcon } from "lucide-react";
 import { useForm } from "react-hook-form";
 
 import { CalendarInput } from "@/components/calendar-input.component";
+import { DateInput } from "@/components/date-input.component";
 import { LoadingButton } from "@/components/loading-button.component";
 import { TimeInput } from "@/components/time-input.component";
+import { Button } from "@/components/ui/button";
 import {
   FormControl,
   FormField,
@@ -20,6 +23,8 @@ import {
   CreateRecordSchema,
   createRecordSchema,
 } from "@/shared/schemas/record.schema";
+import { cn } from "@/shared/utils/cn.util";
+import { formatDate } from "@/shared/utils/date.util";
 
 import { CategoryInput } from "../../../category-input/category-input.component";
 
@@ -94,7 +99,28 @@ export const NewRecordForm: React.FC<NewRecordFormProps> = ({
             <FormItem>
               <FormLabel>Date</FormLabel>
               <FormControl>
-                <CalendarInput date={field.value} setDate={field.onChange} />
+                <DateInput
+                  {...field}
+                  mode="single"
+                  selected={field.value}
+                  onSelect={(value) => field.onChange(value ?? new Date())}
+                  initialFocus
+                >
+                  <Button
+                    variant="outline"
+                    className={cn(
+                      "w-full justify-start text-left font-normal",
+                      !field.value && "text-muted-foreground"
+                    )}
+                  >
+                    <CalendarIcon className="mr-2 h-4 w-4" />
+                    {field.value ? (
+                      formatDate(field.value)
+                    ) : (
+                      <span>Pick a date</span>
+                    )}
+                  </Button>
+                </DateInput>
               </FormControl>
               <FormMessage />
             </FormItem>

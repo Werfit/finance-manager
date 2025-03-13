@@ -1,4 +1,4 @@
-import { and, count, desc, eq, getTableColumns, sum } from "drizzle-orm";
+import { and, count, desc, eq, getTableColumns, sql } from "drizzle-orm";
 
 import { getServerUser } from "@/libs/supabase/utils/getServerUser.util";
 import { CreateRecordSchema } from "@/shared/schemas/record.schema";
@@ -17,11 +17,21 @@ import { processCSVRecords } from "./record.utils";
 
 export const getTotalAmountQuery = async (sheetId: Sheet["id"]) => {
   const total = await db
-    .select({ sum: sum(recordsTable.amount) })
+    .select({
+      sum: sql<string>`
+        SUM(
+          CASE
+            WHEN ${categoriesTable.type} = 'income' THEN ${recordsTable.amount}
+            WHEN ${categoriesTable.type} = 'expense' THEN -${recordsTable.amount}
+            ELSE 0
+          END
+        )`,
+    })
     .from(recordsTable)
+    .innerJoin(categoriesTable, eq(recordsTable.categoryId, categoriesTable.id))
     .where(eq(recordsTable.sheetId, sheetId));
 
-  return total[0].sum;
+  return total[0].sum ?? 0; // Ensure a valid number is returned
 };
 
 export const getSheetRecordsQuery = async (
@@ -39,9 +49,9 @@ export const getSheetRecordsQuery = async (
     .from(recordsTable)
     .where(eq(recordsTable.sheetId, sheetId))
     .leftJoin(categoriesTable, eq(categoriesTable.id, recordsTable.categoryId))
-    .orderBy(desc(recordsTable.createdAt))
-    .limit(limit)
-    .offset(offset);
+    .orderBy(desc(recordsTable.createdAt), desc(recordsTable.id))
+    .offset(offset)
+    .limit(limit);
 
   const total = await db
     .select({ count: count() })

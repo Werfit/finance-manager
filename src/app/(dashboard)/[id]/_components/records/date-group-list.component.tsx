@@ -1,5 +1,6 @@
 import { Badge } from "@/components/badge.component";
 import { DateRecordsGroup } from "@/hooks/use-grouped-records.hook";
+import { CategoryType } from "@/libs/db/shared/enums";
 import { formatDate } from "@/shared/utils/date.util";
 import { formatCurrency } from "@/shared/utils/number.util";
 
@@ -20,7 +21,17 @@ export const DateGroupList: React.FC<DateGroupListProps> = ({ groups }) => (
 
           <Badge className="bg-accent text-accent-foreground text-sm font-bold">
             {formatCurrency(
-              group.records.reduce((acc, record) => acc + record.amount, 0)
+              group.records.reduce((acc, record) => {
+                if (!record.category) {
+                  return acc;
+                }
+
+                if (record.category.type === CategoryType.EXPENSE) {
+                  return acc - record.amount;
+                }
+
+                return acc + record.amount;
+              }, 0)
             )}
           </Badge>
         </div>

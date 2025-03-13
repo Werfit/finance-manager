@@ -43,3 +43,34 @@ export const importedRecordsSchema = z.array(
 );
 
 export type ImportedRecordsSchema = z.infer<typeof importedRecordsSchema>;
+
+export const generateRandomTransactionsSchema = z.object({
+  total: z.number().positive("Amount must be greater than 0"),
+  period: z
+    .object({
+      from: z.date(),
+      to: z.date(),
+    })
+    .refine(({ from, to }) => from.getTime() < to.getTime(), {
+      path: ["root"],
+      message: "Incorrect period range",
+    }),
+  categories: z.array(
+    z.object({
+      categoryId: z.string().uuid("Incorrect category selected"),
+      range: z
+        .object({
+          min: z.number().nullable(),
+          max: z.number().nullable(),
+        })
+        .refine(({ min, max }) => min === null || max === null || min < max, {
+          message: "Min value must be less than max value",
+          path: ["root"],
+        }),
+    })
+  ),
+});
+
+export type GenerateRandomTransactionsSchema = z.infer<
+  typeof generateRandomTransactionsSchema
+>;

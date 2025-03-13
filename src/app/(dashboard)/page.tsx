@@ -12,14 +12,16 @@ const Page = async () => {
   await queryClient.prefetchQuery(getSheetsOptions);
 
   return (
-    <HydrationBoundary state={dehydrate(queryClient)}>
-      <Navigation
-        title={
-          <h6 className="text-muted-foreground text-sm font-bold">Sheets</h6>
-        }
-      />
-      <SheetList />
-    </HydrationBoundary>
+    <div className="mx-auto max-w-2xl">
+      <HydrationBoundary state={dehydrate(queryClient)}>
+        <Navigation
+          title={
+            <h6 className="text-muted-foreground text-sm font-bold">Sheets</h6>
+          }
+        />
+        <SheetList />
+      </HydrationBoundary>
+    </div>
   );
 };
 

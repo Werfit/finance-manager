@@ -18,15 +18,19 @@ const Page: React.FC<PageProps<{ id: string }>> = async ({ params }) => {
   const { id } = await params;
   const queryClient = new QueryClient();
 
-  await queryClient.prefetchInfiniteQuery(getSheetRecordsQuery(id));
-  await queryClient.prefetchQuery(getTotalAmountQuery(id));
-  await queryClient.prefetchQuery(getSheetOptions(id));
+  await Promise.allSettled([
+    queryClient.prefetchInfiniteQuery(getSheetRecordsQuery(id)),
+    queryClient.prefetchQuery(getTotalAmountQuery(id)),
+    queryClient.prefetchQuery(getSheetOptions(id)),
+  ]);
 
   return (
-    <HydrationBoundary state={dehydrate(queryClient)}>
-      <SheetNavigation sheetId={id} />
-      <Dashboard sheetId={id} />
-    </HydrationBoundary>
+    <div className="mx-auto max-w-2xl">
+      <HydrationBoundary state={dehydrate(queryClient)}>
+        <SheetNavigation sheetId={id} />
+        <Dashboard sheetId={id} />
+      </HydrationBoundary>
+    </div>
   );
 };
 
