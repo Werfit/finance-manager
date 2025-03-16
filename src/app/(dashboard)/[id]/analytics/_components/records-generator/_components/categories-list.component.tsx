@@ -30,18 +30,18 @@ export const CategoriesList: React.FC<CategoriesListProps> = ({
     replace(
       data.categories.map((category) => ({
         categoryId: category.id,
-        range: {
+        amount: {
           min: 0,
           max: 100_000,
+        },
+        frequency: {
+          min: 0,
+          max: 60,
         },
       }))
     );
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [data]);
-
-  if (data) {
-    console.log(data, fields);
-  }
 
   if (isError) {
     return (
@@ -83,7 +83,14 @@ export const CategoriesList: React.FC<CategoriesListProps> = ({
               return null;
             }
 
-            return <CategoryInput key={field.id} category={category} />;
+            return (
+              <CategoryInput
+                control={control}
+                index={index}
+                key={field.id}
+                category={category}
+              />
+            );
           })}
         </div>
       </div>
@@ -106,7 +113,14 @@ export const CategoriesList: React.FC<CategoriesListProps> = ({
               return null;
             }
 
-            return <CategoryInput key={field.id} category={category} />;
+            return (
+              <CategoryInput
+                control={control}
+                index={index}
+                key={field.id}
+                category={category}
+              />
+            );
           })}
         </div>
       </div>

@@ -6,6 +6,7 @@ import { getSheetRecordsWithCategoriesQuery } from "@/libs/db/queries/records/re
 import { Category, Record as UserRecord, Sheet } from "@/libs/db/schema";
 import { serverEnvironment } from "@/shared/environment/server.environment";
 import { ActionResponse } from "@/shared/types/action.type";
+import { getServerUser } from "@/libs/supabase/utils/getServerUser.util";
 
 type ProcessedCategory = Category & {
   rollingMean: number;
@@ -62,7 +63,8 @@ export const getPredictions = async (
   sheetId: Sheet["id"]
 ): Promise<ActionResponse<PredictedCategory[]>> => {
   try {
-    const records = await getSheetRecordsWithCategoriesQuery(sheetId);
+    const user = await getServerUser();
+    const records = await getSheetRecordsWithCategoriesQuery(sheetId, user.id);
 
     if (!records) {
       notFound();

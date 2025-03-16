@@ -1,4 +1,4 @@
-import { Sheet } from "../../db/schema";
+import { Category, Sheet } from "../../db/schema";
 
 export const PredictionQueryKeys = {
   all: ["all"] as const,
@@ -14,6 +14,8 @@ export const SheetsQueryKeys = {
 
 export const RecordsQueryKeys = {
   all: ["records"] as const,
+  byCategoryId: (categoryId: Category["id"]) =>
+    [...RecordsQueryKeys.all, categoryId] as const,
   bySheetId: (sheetId: Sheet["id"]) =>
     [...RecordsQueryKeys.all, sheetId] as const,
   bySheetIdTotalAmount: (sheetId: Sheet["id"]) =>

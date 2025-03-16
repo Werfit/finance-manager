@@ -9,10 +9,11 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { getSheetOptions } from "@/libs/query/queries/sheets.queries";
 
-import { useAnalytics } from "../../_context/analytics-context.hooks";
+import { AnalyticsLayoutParams } from "../../../_shared/params.types";
+import { useParams } from "next/navigation";
 
 export const AnalyticsNavigationTitle: React.FC = () => {
-  const { sheetId } = useAnalytics();
+  const { id: sheetId } = useParams<AnalyticsLayoutParams>();
   const { data: sheet, isPending } = useQuery(getSheetOptions(sheetId));
 
   return (

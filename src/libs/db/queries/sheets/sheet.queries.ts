@@ -1,4 +1,4 @@
-import { count, desc, eq } from "drizzle-orm";
+import { and, count, desc, eq } from "drizzle-orm";
 
 import { db } from "@/libs/db/drizzle";
 import { recordsTable, Sheet, sheetsTable } from "@/libs/db/schema";
@@ -47,6 +47,22 @@ export const getSheetQuery = async (sheetId: Sheet["id"]) => {
     .select()
     .from(sheetsTable)
     .where(eq(sheetsTable.id, sheetId));
+
+  if (result.length === 0) {
+    return null;
+  }
+
+  return result[0];
+};
+
+export const getUserSheetQuery = async (
+  sheetId: Sheet["id"],
+  userId: User["id"]
+) => {
+  const result = await db
+    .select()
+    .from(sheetsTable)
+    .where(and(eq(sheetsTable.id, sheetId), eq(sheetsTable.userId, userId)));
 
   if (result.length === 0) {
     return null;

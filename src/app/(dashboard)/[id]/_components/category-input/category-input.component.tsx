@@ -1,7 +1,5 @@
-import { useQuery } from "@tanstack/react-query";
-
 import { Typeahead } from "@/components/typeahead.component";
-import { getCategoriesOptions } from "@/libs/query/queries/categories.queries";
+import { useGetCategories } from "@/libs/query/queries/categories.queries";
 
 type CategoryInputProps = Omit<
   React.ComponentProps<typeof Typeahead>,
@@ -9,7 +7,7 @@ type CategoryInputProps = Omit<
 >;
 
 export const CategoryInput: React.FC<CategoryInputProps> = ({ ...props }) => {
-  const { data, isLoading, isError } = useQuery(getCategoriesOptions());
+  const { data, isLoading, isError } = useGetCategories();
 
   const categories = isLoading || isError ? [] : data?.categories || [];
 

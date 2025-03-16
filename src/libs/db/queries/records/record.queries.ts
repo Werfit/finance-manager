@@ -1,19 +1,21 @@
 import { and, count, desc, eq, getTableColumns, sql } from "drizzle-orm";
 
-import { getServerUser } from "@/libs/supabase/utils/getServerUser.util";
 import { CreateRecordSchema } from "@/shared/schemas/record.schema";
-import { parseCsv } from "@/shared/utils/csv.util";
 
 import { db } from "../../drizzle";
 import {
   categoriesTable,
+  Record,
   recordsTable,
   Sheet,
   sheetsTable,
   User,
 } from "../../schema";
-import { RecordsList } from "./record.types";
-import { processCSVRecords } from "./record.utils";
+import {
+  CreateRecordsBatchProps,
+  GetRecordsByCategoryProps,
+  RecordsList,
+} from "./record.types";
 
 export const getTotalAmountQuery = async (sheetId: Sheet["id"]) => {
   const total = await db
@@ -68,14 +70,13 @@ export const getSheetRecordsQuery = async (
 };
 
 export const getSheetRecordsWithCategoriesQuery = async (
-  sheetId: Sheet["id"]
+  sheetId: Sheet["id"],
+  userId: User["id"]
 ) => {
-  const user = await getServerUser();
-
   const sheets = await db
     .select()
     .from(sheetsTable)
-    .where(and(eq(sheetsTable.userId, user.id), eq(sheetsTable.id, sheetId)));
+    .where(and(eq(sheetsTable.userId, userId), eq(sheetsTable.id, sheetId)));
 
   if (!sheets[0]) {
     return null;
@@ -112,55 +113,47 @@ export const createRecordQuery = async (
   return records[0];
 };
 
-export const importRecordsQuery = async (
-  file: File,
-  sheetId: Sheet["id"],
-  userId: User["id"]
+export const createMultipleRecordsQuery = async (
+  data: Omit<Record, "id">[]
 ) => {
-  try {
-    const rawRecords = await parseCsv(file);
+  await db.insert(recordsTable).values(data);
+};
 
-    const processedRecordsInput = await processCSVRecords(rawRecords);
+export const createRecordsBatch = async ({
+  sheetId,
+  records,
+}: CreateRecordsBatchProps) => {
+  const result = await db
+    .insert(recordsTable)
+    .values(
+      records.map((record) => ({
+        ...record,
+        sheetId,
+      }))
+    )
+    .returning();
 
-    if (!processedRecordsInput) {
-      throw new Error("Failed to process records");
-    }
+  return result;
+};
 
-    const categoryNames = new Set(
-      processedRecordsInput.map((record) => record.categoryName.trim())
+export const getRecordsByCategoryQuery = async ({
+  sheetId,
+  userId,
+  categoryId,
+}: GetRecordsByCategoryProps) => {
+  const records = await db
+    .select({ ...getTableColumns(recordsTable) })
+    .from(recordsTable)
+    .leftJoin(
+      sheetsTable,
+      and(
+        eq(sheetsTable.id, recordsTable.sheetId),
+        eq(sheetsTable.userId, userId)
+      )
+    )
+    .where(
+      and(eq(recordsTable.categoryId, categoryId), eq(sheetsTable.id, sheetId))
     );
 
-    // Create categories first
-    const categories = await db
-      .insert(categoriesTable)
-      .values(
-        Array.from(categoryNames).map((name) => ({
-          name,
-          sheetId,
-          userId,
-        }))
-      )
-      .returning();
-
-    const categoryMap = new Map(
-      categories.map((category) => [category.name, category.id])
-    );
-
-    const records = await db
-      .insert(recordsTable)
-      .values(
-        processedRecordsInput.map((record) => ({
-          ...record,
-          sheetId,
-          categoryId: categoryMap.get(record.categoryName)!,
-          createdAt: new Date(record.createdAt),
-        }))
-      )
-      .returning();
-
-    return records;
-  } catch (error) {
-    console.error(error);
-    throw new Error("Failed to import records");
-  }
+  return records;
 };

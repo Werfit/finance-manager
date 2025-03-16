@@ -1,7 +1,6 @@
 import { MinusIcon } from "lucide-react";
 import { useId, useState } from "react";
 
-import { MinMaxInput } from "@/components/min-max-input.component";
 import { SimpleTooltip } from "@/components/simple-tooltip.component";
 import {
   Accordion,
@@ -10,26 +9,34 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 import { Button } from "@/components/ui/button";
-import { Label } from "@/components/ui/label";
 import { Category } from "@/libs/db/schema";
-import { GenerateRandomTransactionsSchema } from "@/shared/schemas/record.schema";
+import {
+  GenerateRandomTransactionsSchema,
+  RangeObject,
+} from "@/shared/schemas/record.schema";
+import { Control } from "react-hook-form";
+import {
+  FormControl,
+  FormDescription,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
+import { MinMaxInput } from "@/components/min-max-input.component";
+import { extractCategoryError } from "./utils/extract-category-error.util";
 
 type CategoryInputProps = {
   category: Category;
+  index: number;
+  control: Control<GenerateRandomTransactionsSchema>;
 };
 
-type CategoryState =
-  GenerateRandomTransactionsSchema["categories"][number]["range"];
-
-export const CategoryInput: React.FC<CategoryInputProps> = ({ category }) => {
-  const [amount, setAmount] = useState<CategoryState>({
-    min: -10_000,
-    max: 10_000,
-  });
-  const [frequency, setFrequency] = useState<CategoryState>({
-    min: 0,
-    max: 60,
-  });
+export const CategoryInput: React.FC<CategoryInputProps> = ({
+  category,
+  index,
+  control,
+}) => {
   const id = useId();
 
   return (
@@ -52,23 +59,45 @@ export const CategoryInput: React.FC<CategoryInputProps> = ({ category }) => {
           </div>
 
           <AccordionContent className="flex flex-col gap-4">
-            <div className="flex flex-wrap gap-2">
-              <Label className="font-semibold">Amount Range</Label>
-              <p className="text-muted-foreground text-xs">
-                Min and max amount you want the range transaction amount to be.
-              </p>
+            <FormField
+              control={control}
+              name={`categories.${index}.amount`}
+              render={({ field, fieldState }) => (
+                <FormItem>
+                  <FormLabel>Amount Range</FormLabel>
+                  <FormDescription>
+                    Min and max amount you want the range transaction amount to
+                    be.
+                  </FormDescription>
+                  <FormControl>
+                    <MinMaxInput {...field} />
+                  </FormControl>
 
-              <MinMaxInput value={amount} onChange={setAmount} />
-            </div>
+                  <FormMessage>
+                    {extractCategoryError(fieldState.error)}
+                  </FormMessage>
+                </FormItem>
+              )}
+            />
 
-            <div className="flex flex-wrap gap-2">
-              <Label className="font-semibold">Frequency Range</Label>
-              <p className="text-muted-foreground text-xs">
-                How often a transaction can occur within a month.
-              </p>
-
-              <MinMaxInput value={frequency} onChange={setFrequency} />
-            </div>
+            <FormField
+              control={control}
+              name={`categories.${index}.frequency`}
+              render={({ field, fieldState }) => (
+                <FormItem>
+                  <FormLabel>Frequency Range</FormLabel>
+                  <FormDescription>
+                    How often a transaction can occur within a month.
+                  </FormDescription>
+                  <FormControl>
+                    <MinMaxInput {...field} />
+                  </FormControl>
+                  <FormMessage>
+                    {extractCategoryError(fieldState.error)}
+                  </FormMessage>
+                </FormItem>
+              )}
+            />
           </AccordionContent>
         </AccordionItem>
       </Accordion>

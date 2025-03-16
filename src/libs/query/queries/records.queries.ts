@@ -2,18 +2,24 @@ import {
   infiniteQueryOptions,
   queryOptions,
   useMutation,
+  useQuery,
   useQueryClient,
 } from "@tanstack/react-query";
 
 import {
   createRecord,
+  generateRandomTransactions,
+  getRecordsByCategory,
   getSheetRecords,
   getTotalAmount,
   importRecords,
 } from "@/app/actions/records.actions";
 import { toast, useToast } from "@/hooks/use-toast.hook";
-import { Sheet } from "@/libs/db/schema";
-import { CreateRecordSchema } from "@/shared/schemas/record.schema";
+import { Category, Sheet } from "@/libs/db/schema";
+import {
+  CreateRecordSchema,
+  GenerateRandomTransactionsSchema,
+} from "@/shared/schemas/record.schema";
 
 import {
   PredictionQueryKeys,
@@ -119,4 +125,61 @@ export const useImportRecordsMutation = (
       });
     },
   });
+};
+
+export const useGenerateRandomTransactionsMutation = (
+  sheetId: Sheet["id"],
+  onSuccess?: () => void
+) => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (value: GenerateRandomTransactionsSchema) => {
+      const response = await generateRandomTransactions(value, sheetId);
+
+      if (!response.success) {
+        throw new Error(response.error);
+      }
+
+      return response.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: RecordsQueryKeys.bySheetId(sheetId),
+      });
+      queryClient.invalidateQueries({
+        queryKey: RecordsQueryKeys.bySheetIdTotalAmount(sheetId),
+      });
+      onSuccess?.();
+    },
+    onError: (error) => {
+      toast({
+        title: "Error",
+        description: error.message,
+      });
+    },
+  });
+};
+
+export const getCategoryRecordsOptions = (
+  categoryId: Category["id"],
+  sheetId: Sheet["id"]
+) =>
+  queryOptions({
+    queryKey: RecordsQueryKeys.byCategoryId(categoryId),
+    queryFn: async () => {
+      const response = await getRecordsByCategory(categoryId, sheetId);
+
+      if (!response.success) {
+        throw new Error(response.error);
+      }
+      return response.data;
+    },
+  });
+
+export const useGetRecordsByCategoryQuery = (
+  categoryId: Category["id"],
+  sheetId: Sheet["id"]
+) => {
+  return useQuery(getCategoryRecordsOptions(categoryId, sheetId));
 };

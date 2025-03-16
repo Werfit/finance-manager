@@ -1,3 +1,5 @@
+"use client";
+
 import { DicesIcon } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -5,20 +7,23 @@ import {
   Drawer,
   DrawerContent,
   DrawerDescription,
-  // DrawerFooter,
   DrawerHeader,
   DrawerTitle,
   DrawerTrigger,
 } from "@/components/ui/drawer";
 
 import { RecordsGeneratorForm } from "./records-generator-form.component";
+import { useState } from "react";
 
-// import { useAnalytics } from "../../_context/analytics-context.hooks";
+import { AnalyticsLayoutParams } from "../../../_shared/params.types";
+import { useParams } from "next/navigation";
 
 export const RecordsGenerator = () => {
-  // const { sheetId } = useAnalytics();
+  const [open, setOpen] = useState(false);
+  const { id: sheetId } = useParams<AnalyticsLayoutParams>();
+
   return (
-    <Drawer direction="right">
+    <Drawer direction="right" open={open} onOpenChange={setOpen}>
       <DrawerTrigger asChild>
         <Button variant="outline" size="icon">
           <DicesIcon />
@@ -34,7 +39,10 @@ export const RecordsGenerator = () => {
         </DrawerHeader>
 
         <div className="overflow-y-auto px-4">
-          <RecordsGeneratorForm />
+          <RecordsGeneratorForm
+            sheetId={sheetId}
+            onSubmit={() => setOpen(false)}
+          />
         </div>
       </DrawerContent>
     </Drawer>

@@ -1,4 +1,4 @@
-import { ChartPieIcon } from "lucide-react";
+import { ChartAreaIcon } from "lucide-react";
 import Link from "next/link";
 
 import { Button } from "@/components/ui/button";
@@ -14,8 +14,8 @@ type SheetToolbarProps = {
 export const SheetToolbar: React.FC<SheetToolbarProps> = ({ sheetId }) => (
   <>
     <Button variant="outline" size="icon" asChild>
-      <Link href={`/${sheetId}/statistics`}>
-        <ChartPieIcon />
+      <Link href={`/${sheetId}/analytics`}>
+        <ChartAreaIcon />
       </Link>
     </Button>
     <ImportRecordsButton sheetId={sheetId} />

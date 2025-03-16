@@ -44,32 +44,57 @@ export const importedRecordsSchema = z.array(
 
 export type ImportedRecordsSchema = z.infer<typeof importedRecordsSchema>;
 
-export const generateRandomTransactionsSchema = z.object({
-  total: z.number().positive("Amount must be greater than 0"),
-  period: z
-    .object({
-      from: z.date(),
-      to: z.date(),
-    })
-    .refine(({ from, to }) => from.getTime() < to.getTime(), {
-      path: ["root"],
-      message: "Incorrect period range",
-    }),
-  categories: z.array(
-    z.object({
-      categoryId: z.string().uuid("Incorrect category selected"),
-      range: z
-        .object({
-          min: z.number().nullable(),
-          max: z.number().nullable(),
-        })
-        .refine(({ min, max }) => min === null || max === null || min < max, {
-          message: "Min value must be less than max value",
-          path: ["root"],
-        }),
-    })
-  ),
-});
+export const rangeObject = z
+  .object({
+    min: z.number().nonnegative(),
+    max: z.number().nonnegative(),
+  })
+  .refine(({ min, max }) => min === null || max === null || min <= max, {
+    message: "Min value must be less than max value",
+    path: [],
+  });
+
+export type RangeObject = z.infer<typeof rangeObject>;
+
+export const generateRandomTransactionsSchema = z
+  .object({
+    total: z.number().positive("Amount must be greater than 0"),
+    period: z
+      .object({
+        from: z.date(),
+        to: z.date(),
+      })
+      .refine(({ from, to }) => from.getTime() < to.getTime(), {
+        path: [],
+        message: "Incorrect period range",
+      }),
+    categories: z.array(
+      z.object({
+        categoryId: z.string().uuid("Incorrect category selected"),
+        amount: rangeObject,
+        frequency: rangeObject,
+      })
+    ),
+  })
+  .refine(
+    ({ total, categories }) => {
+      const minSum = categories.reduce(
+        (sum, category) => sum + category.frequency.min,
+        0
+      );
+      const maxSum = categories.reduce(
+        (sum, category) => sum + category.frequency.max,
+        0
+      );
+
+      return total > minSum && total >= maxSum;
+    },
+    {
+      message:
+        "Total amount must be bigger than sum of the categories min/max values",
+      path: ["total"],
+    }
+  );
 
 export type GenerateRandomTransactionsSchema = z.infer<
   typeof generateRandomTransactionsSchema
