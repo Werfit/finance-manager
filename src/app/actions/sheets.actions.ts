@@ -81,7 +81,13 @@ export const getSheets = async (): Promise<
 
 export const getSheet = async (
   sheetId: Sheet["id"]
-): Promise<ActionResponse<Sheet>> => {
+): Promise<
+  ActionResponse<
+    Sheet & {
+      records: number;
+    }
+  >
+> => {
   try {
     const sheet = await getSheetQuery(sheetId);
 

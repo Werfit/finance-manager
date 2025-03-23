@@ -1,10 +1,20 @@
-import { and, count, desc, eq, getTableColumns, sql } from "drizzle-orm";
+import {
+  and,
+  count,
+  desc,
+  eq,
+  getTableColumns,
+  gte,
+  lte,
+  sql,
+} from "drizzle-orm";
 
 import { CreateRecordSchema } from "@/shared/schemas/record.schema";
 
 import { db } from "../../drizzle";
 import {
   categoriesTable,
+  Category,
   Record,
   recordsTable,
   Sheet,
@@ -14,6 +24,8 @@ import {
 import {
   CreateRecordsBatchProps,
   GetRecordsByCategoryProps,
+  GetSpentInCategoryAmountProps,
+  GetSpentInSheetAmountProps,
   RecordsList,
 } from "./record.types";
 
@@ -156,4 +168,57 @@ export const getRecordsByCategoryQuery = async ({
     );
 
   return records;
+};
+
+export const getSpentInSheetAmountQuery = async ({
+  sheetId,
+  period,
+}: GetSpentInSheetAmountProps) => {
+  const getCondition = () => {
+    if (period) {
+      return and(
+        eq(recordsTable.sheetId, sheetId),
+        gte(recordsTable.createdAt, period.from),
+        lte(recordsTable.createdAt, period.to)
+      );
+    }
+
+    return and(eq(recordsTable.sheetId, sheetId));
+  };
+
+  const records = await db
+    .select({ sum: sql<number>`SUM(${recordsTable.amount})` })
+    .from(recordsTable)
+    .where(getCondition());
+
+  return records[0].sum ?? 0;
+};
+
+export const getSpentInCategoryAmountQuery = async ({
+  categoryId,
+  sheetId,
+  period,
+}: GetSpentInCategoryAmountProps) => {
+  const getCondition = () => {
+    if (period) {
+      return and(
+        eq(recordsTable.categoryId, categoryId),
+        eq(recordsTable.sheetId, sheetId),
+        gte(recordsTable.createdAt, period.from),
+        lte(recordsTable.createdAt, period.to)
+      );
+    }
+
+    return and(
+      eq(recordsTable.categoryId, categoryId),
+      eq(recordsTable.sheetId, sheetId)
+    );
+  };
+
+  const records = await db
+    .select({ sum: sql<number>`SUM(${recordsTable.amount})` })
+    .from(recordsTable)
+    .where(getCondition());
+
+  return records[0].sum ?? 0;
 };

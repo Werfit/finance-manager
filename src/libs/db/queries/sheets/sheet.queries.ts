@@ -1,4 +1,4 @@
-import { and, count, desc, eq } from "drizzle-orm";
+import { and, count, desc, eq, getTableColumns } from "drizzle-orm";
 
 import { db } from "@/libs/db/drizzle";
 import { recordsTable, Sheet, sheetsTable } from "@/libs/db/schema";
@@ -44,9 +44,14 @@ export const getSheetsAndCountRecordsQuery = async (
 
 export const getSheetQuery = async (sheetId: Sheet["id"]) => {
   const result = await db
-    .select()
+    .select({
+      ...getTableColumns(sheetsTable),
+      records: count(),
+    })
     .from(sheetsTable)
-    .where(eq(sheetsTable.id, sheetId));
+    .leftJoin(recordsTable, eq(recordsTable.sheetId, sheetsTable.id))
+    .where(eq(sheetsTable.id, sheetId))
+    .groupBy(sheetsTable.id);
 
   if (result.length === 0) {
     return null;

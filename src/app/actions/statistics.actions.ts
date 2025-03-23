@@ -2,152 +2,88 @@
 
 import { notFound } from "next/navigation";
 
-import { getSheetRecordsWithCategoriesQuery } from "@/libs/db/queries/records/record.queries";
-import { Category, Record as UserRecord, Sheet } from "@/libs/db/schema";
-import { serverEnvironment } from "@/shared/environment/server.environment";
+import { getCategoryByIdQuery } from "@/libs/db/queries/categories/categories.queries";
+import { Category, Sheet } from "@/libs/db/schema";
 import { ActionResponse } from "@/shared/types/action.type";
 import { getServerUser } from "@/libs/supabase/utils/getServerUser.util";
-
-type ProcessedCategory = Category & {
-  rollingMean: number;
-  lastMonthSpent: number;
-};
-
-type PredictedCategory = Omit<ProcessedCategory, "createdAt"> & {
-  prediction: number;
-};
-
-const fetchPredictions = async (
-  categories: ProcessedCategory[]
-): Promise<PredictedCategory[]> => {
-  const nextMonth = new Date();
-  nextMonth.setMonth(nextMonth.getMonth() + 1);
-
-  const response = await fetch(serverEnvironment.API_URL, {
-    method: "POST",
-    headers: {
-      "Content-type": "application/json",
-    },
-    body: JSON.stringify({
-      categories: categories.map((category) => ({
-        month_number: nextMonth.getMonth() + 1,
-        year: nextMonth.getFullYear(),
-        category_id: category.id,
-        category_name: category.name,
-        last_month_spent: category.lastMonthSpent,
-        rolling_mean: category.rollingMean,
-      })),
-    }),
-  });
-
-  const result = (await response.json()) as {
-    predictions: {
-      category_id: string;
-      category_name: string;
-      last_month_spent: number;
-      rolling_mean: number;
-      predicted_expense: number;
-    }[];
-  };
-
-  return result.predictions.map((result) => ({
-    id: result.category_id,
-    name: result.category_name,
-    lastMonthSpent: result.last_month_spent,
-    rollingMean: result.rolling_mean,
-    prediction: result.predicted_expense,
-  }));
-};
+import {
+  fetchPredictionData,
+  gatherSheetPredictionData,
+} from "@/services/statistics.service";
+import { getUserSheetQuery } from "@/libs/db/queries/sheets/sheet.queries";
+import { tryCatch } from "@/libs/try-catch/try-catch";
+import { serverEnvironment } from "@/shared/environment/server.environment";
 
 export const getPredictions = async (
-  sheetId: Sheet["id"]
-): Promise<ActionResponse<PredictedCategory[]>> => {
-  try {
-    const user = await getServerUser();
-    const records = await getSheetRecordsWithCategoriesQuery(sheetId, user.id);
+  sheetId: Sheet["id"],
+  categoryId: Category["id"]
+): Promise<
+  ActionResponse<{ predictedAmount: number; predictedPercentage: number }>
+> => {
+  const user = await getServerUser();
 
-    if (!records) {
-      notFound();
-    }
+  const result = await tryCatch(async () =>
+    getUserSheetQuery(sheetId, user.id)
+  );
 
-    const groupedRecords = records.reduce(
-      (acc, record) => {
-        const category = record.categories;
-        if (!category) {
-          return acc;
-        }
+  if (!result.success) {
+    notFound();
+  }
 
-        if (!acc[category.id]) {
-          acc[category.id] = {
-            category: category,
-            records: [],
-          };
-        }
+  const categoryResult = await tryCatch(async () =>
+    getCategoryByIdQuery(categoryId)
+  );
 
-        acc[category.id].records.push(record.records);
-        return acc;
-      },
-      {} as Record<
-        Category["id"],
-        {
-          category: Category;
-          records: UserRecord[];
-        }
-      >
-    );
+  if (!categoryResult.success) {
+    notFound();
+  }
 
-    const results = Object.entries(groupedRecords).map(
-      ([_, { records, category }]): Category & {
-        lastMonthSpent: number;
-        rollingMean: number;
-      } => {
-        const sortedRecords = records.sort(
-          (a, b) =>
-            new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
-        );
+  const statistics = await tryCatch(async () =>
+    gatherSheetPredictionData(categoryId, sheetId)
+  );
 
-        // Підрахунок lastMonthSpent та rollingMean для кожної категорії
-        const totalSpentByMonth = sortedRecords.reduce(
-          (acc, record) => {
-            const month = `${record.createdAt.getFullYear()}-${record.createdAt.getMonth()}`;
-            acc[month] = (acc[month] || 0) + record.amount;
-            return acc;
-          },
-          {} as Record<string, number>
-        );
-
-        const months = Object.entries(totalSpentByMonth);
-        let lastMonthSpent = 0;
-        let rollingMean = 0;
-
-        if (months.length > 1) {
-          lastMonthSpent = months[months.length - 2][1];
-        }
-
-        if (months.length >= 3) {
-          const recentMonths = months.slice(-3).map(([_, spent]) => spent);
-          rollingMean =
-            recentMonths.reduce((sum, spent) => sum + spent, 0) /
-            recentMonths.length;
-        }
-
-        return {
-          ...category,
-          lastMonthSpent,
-          rollingMean,
-        };
-      }
-    );
-
-    return {
-      success: true,
-      data: await fetchPredictions(results),
-    };
-  } catch (error_) {
-    const error = error_ as Error;
+  if (!statistics.success) {
     return {
       success: false,
-      error: error.message,
+      error: "Failed to gather current state of the category",
     };
   }
+
+  const prediction = await fetchPredictionData(statistics.data);
+
+  if (!prediction) {
+    return {
+      success: false,
+      error: "Failed to fetch prediction data",
+    };
+  }
+
+  return {
+    success: true,
+    data: {
+      predictedAmount: prediction.predicted_next_month_spent,
+      predictedPercentage: prediction.predicted_next_month_spent_percentage,
+    },
+  };
+};
+
+export const getActivityHealth = async (): Promise<
+  ActionResponse<{ ok: boolean }>
+> => {
+  const result = await tryCatch(async () => {
+    const response = await fetch(serverEnvironment.API_URL + "/health");
+
+    if (!response.ok) {
+      throw new Error("Failed to fetch activity health");
+    }
+
+    return response.json();
+  });
+
+  return {
+    success: true,
+    data: {
+      ok: result.success,
+    },
+  };
 };

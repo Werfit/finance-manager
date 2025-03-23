@@ -72,7 +72,7 @@ export const useCreateRecordMutation = (
 
       return response.data;
     },
-    onSuccess: () => {
+    onSuccess: (record) => {
       queryClient.invalidateQueries({
         queryKey: RecordsQueryKeys.bySheetId(sheetId),
       });
@@ -80,7 +80,10 @@ export const useCreateRecordMutation = (
         queryKey: RecordsQueryKeys.bySheetIdTotalAmount(sheetId),
       });
       queryClient.invalidateQueries({
-        queryKey: PredictionQueryKeys.bySheetId(sheetId),
+        queryKey: PredictionQueryKeys.bySheetAndCategoryId(
+          sheetId,
+          record.categoryId
+        ),
       });
       onSuccess?.();
     },

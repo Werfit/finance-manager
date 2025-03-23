@@ -16,7 +16,11 @@ export type CreateRecordSchema = z.infer<typeof createRecordSchema>;
 
 export const importRecordsSchema = z.object({
   file: z
-    .instanceof(File)
+    .object({
+      type: z.string(),
+      size: z.number(),
+    })
+    // .instanceof(File)
     .refine((file) => file.type === "text/csv", {
       message: "File must be a CSV file",
     })

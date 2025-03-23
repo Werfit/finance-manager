@@ -20,3 +20,20 @@ export type GetRecordsByCategoryProps = {
   sheetId: Sheet["id"];
   userId: User["id"];
 };
+
+export type GetSpentInSheetAmountProps = {
+  sheetId: Sheet["id"];
+  period?: {
+    from: Date;
+    to: Date;
+  };
+};
+
+export type GetSpentInCategoryAmountProps = {
+  categoryId: Category["id"];
+  sheetId: Sheet["id"];
+  period?: {
+    from: Date;
+    to: Date;
+  };
+};

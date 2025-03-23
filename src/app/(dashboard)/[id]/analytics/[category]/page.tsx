@@ -2,20 +2,16 @@ import { Category, Sheet } from "@/libs/db/schema";
 import { PageProps } from "@/shared/types/layout.type";
 
 import { CategoryAnalyticsChart } from "./_components/analytics-chart/category-analytics-chart.component";
-import { formatCurrency } from "@/shared/utils/number.util";
 import {
   dehydrate,
   HydrationBoundary,
   QueryClient,
 } from "@tanstack/react-query";
 import { getCategoryRecordsOptions } from "@/libs/query/queries/records.queries";
-import {
-  extractMonth,
-  formatTransactionDate,
-} from "./_components/analytics-chart/utils";
 import { Button } from "@/components/ui/button";
 import { CheckIcon, XIcon } from "lucide-react";
 import { SimpleTooltip } from "@/components/simple-tooltip.component";
+import { PredictionBadge } from "./_components/prediction-badge/prediction-badge.component";
 
 const Page: React.FC<
   PageProps<{ id: Sheet["id"]; category: Category["id"] }>
@@ -36,17 +32,10 @@ const Page: React.FC<
       </section>
 
       <section>
-        <table className="bg-accent text-accent-foreground w-full rounded shadow-xs transition-colors hover:bg-slate-200">
-          <tbody>
-            <tr className="*:p-4 *:font-semibold">
-              <td className="w-full border-r text-sm">
-                Prediction for the upcoming month (
-                {formatTransactionDate(extractMonth(new Date()))})
-              </td>
-              <td className="border-l text-sm">{formatCurrency(1200)}</td>
-            </tr>
-          </tbody>
-        </table>
+        <PredictionBadge
+          sheetId={parameters.id}
+          categoryId={parameters.category}
+        />
 
         <footer className="mt-2 flex justify-end gap-1">
           <SimpleTooltip content="Mark as incorrect">

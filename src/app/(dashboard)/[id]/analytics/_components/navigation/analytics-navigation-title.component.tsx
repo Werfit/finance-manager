@@ -27,7 +27,9 @@ export const AnalyticsNavigationTitle: React.FC = () => {
       {isPending ? (
         <Skeleton className="h-4 w-24" />
       ) : (
-        <SimpleTooltip content="Sheet contains N records">
+        <SimpleTooltip
+          content={`Sheet contains ${sheet?.records ?? 0} records`}
+        >
           <h6 className="text-muted-foreground text-sm font-bold capitalize">
             {sheet?.name}
           </h6>

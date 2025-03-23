@@ -2,8 +2,8 @@ import { Category, Sheet } from "../../db/schema";
 
 export const PredictionQueryKeys = {
   all: ["all"] as const,
-  bySheetId: (sheetId: Sheet["id"]) =>
-    [...PredictionQueryKeys.all, sheetId] as const,
+  bySheetAndCategoryId: (sheetId: Sheet["id"], categoryId: Category["id"]) =>
+    [...PredictionQueryKeys.all, sheetId, categoryId] as const,
 } as const;
 
 export const SheetsQueryKeys = {
