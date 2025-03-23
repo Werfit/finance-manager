@@ -69,4 +69,4 @@ def health_check():
 # Auto-run uvicorn if this script is executed directly
 if __name__ == "__main__":
     uvicorn.run("main:app", host="0.0.0.0",
-                port=os.getenv("PORT", 8000), reload=True)
+                port=int(os.getenv("PORT", 8000)), reload=True)
