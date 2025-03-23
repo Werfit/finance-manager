@@ -41,7 +41,7 @@ export const ImportRecordsForm = ({
       <form
         className="flex flex-col gap-4"
         onSubmit={form.handleSubmit((formData) => {
-          importRecords(formData.file);
+          importRecords(formData.file as unknown as File);
         })}
       >
         <FormField
@@ -51,7 +51,11 @@ export const ImportRecordsForm = ({
             <FormItem>
               <FormLabel>File</FormLabel>
               <FormControl>
-                <FileInput placeholder="Select a CSV file" {...field} />
+                <FileInput
+                  placeholder="Select a CSV file"
+                  {...field}
+                  value={field.value as unknown as File}
+                />
               </FormControl>
               <FormMessage />
             </FormItem>
