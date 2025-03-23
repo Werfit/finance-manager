@@ -1,5 +1,4 @@
 from fastapi import FastAPI
-from fastapi.middleware.cors import CORSMiddleware
 
 from pydantic import BaseModel
 
@@ -17,16 +16,6 @@ booster = lgb.Booster(model_file="./models/lgbm_model_percentage.txt")
 # Create FastAPI app
 app = FastAPI()
 
-# Set up CORS using environment variable
-origins = [os.getenv("CORS_ORIGIN", "http://localhost:3000")]
-
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=origins,            # or use ["*"] for all
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
 
 # Define the expected input schema
 
