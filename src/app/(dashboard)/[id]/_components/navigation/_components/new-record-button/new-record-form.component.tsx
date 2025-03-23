@@ -4,7 +4,6 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { CalendarIcon } from "lucide-react";
 import { useForm } from "react-hook-form";
 
-import { CalendarInput } from "@/components/calendar-input.component";
 import { DateInput } from "@/components/date-input.component";
 import { LoadingButton } from "@/components/loading-button.component";
 import { TimeInput } from "@/components/time-input.component";

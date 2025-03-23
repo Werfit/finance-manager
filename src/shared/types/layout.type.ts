@@ -1,4 +1,6 @@
-export type LayoutProps<P extends Record<string, string> = {}> = Readonly<{
+export type LayoutProps<
+  P extends Record<string, string> = Record<string, string>,
+> = Readonly<{
   children: React.ReactNode;
   params: Promise<P>;
 }>;

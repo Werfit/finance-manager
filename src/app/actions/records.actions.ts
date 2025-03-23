@@ -2,30 +2,28 @@
 
 import { revalidatePath } from "next/cache";
 
+import { createCategoriesBatch } from "@/libs/db/queries/categories/categories.queries";
 import {
   createMultipleRecordsQuery,
   createRecordQuery,
-  getSheetRecordsQuery,
-  getTotalAmountQuery,
   createRecordsBatch,
   getRecordsByCategoryQuery,
+  getSheetRecordsQuery,
+  getTotalAmountQuery,
 } from "@/libs/db/queries/records/record.queries";
 import { RecordsList } from "@/libs/db/queries/records/record.types";
+import { processCSVRecords } from "@/libs/db/queries/records/record.utils";
+import { getUserSheetQuery } from "@/libs/db/queries/sheets/sheet.queries";
 import { Category, Record, Sheet } from "@/libs/db/schema";
 import { getServerUser } from "@/libs/supabase/utils/getServerUser.util";
+import { generateCategoryRandomTransactions } from "@/services/records.service";
 import {
   CreateRecordSchema,
-  generateRandomTransactionsSchema,
   GenerateRandomTransactionsSchema,
+  generateRandomTransactionsSchema,
 } from "@/shared/schemas/record.schema";
 import { ActionResponse } from "@/shared/types/action.type";
-
-import { generateCategoryRandomTransactions } from "@/services/records.service";
-import { getUserSheetQuery } from "@/libs/db/queries/sheets/sheet.queries";
-import { generateRandomNumber } from "@/shared/utils/random.util";
 import { parseCsv } from "@/shared/utils/csv.util";
-import { processCSVRecords } from "@/libs/db/queries/records/record.utils";
-import { createCategoriesBatch } from "@/libs/db/queries/categories/categories.queries";
 
 export const getTotalAmount = async (
   sheetId: Sheet["id"]

@@ -1,10 +1,11 @@
+import { endOfMonth, startOfMonth, subMonths } from "date-fns";
+
 import { getSpentInCategoryAmountQuery } from "@/libs/db/queries/records/record.queries";
 import { getSpentInSheetAmountQuery } from "@/libs/db/queries/records/record.queries";
 import { Category, Sheet } from "@/libs/db/schema";
 import { logger } from "@/libs/logger/logger";
 import { tryCatch } from "@/libs/try-catch/try-catch";
 import { serverEnvironment } from "@/shared/environment/server.environment";
-import { endOfMonth, startOfMonth, subMonths } from "date-fns";
 
 type PredictionStatistics = {
   totalSpent: number;

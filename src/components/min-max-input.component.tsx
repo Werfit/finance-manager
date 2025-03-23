@@ -1,6 +1,7 @@
 import { cn } from "@/shared/utils/cn.util";
-import { Label } from "./ui/label";
+
 import { NumberInput } from "./number-input.component";
+import { Label } from "./ui/label";
 
 type Value = {
   min: number | null;

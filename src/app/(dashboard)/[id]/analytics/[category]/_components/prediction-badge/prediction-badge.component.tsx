@@ -1,14 +1,15 @@
 "use client";
 
-import { formatCurrency } from "@/shared/utils/number.util";
-import { extractMonth } from "../analytics-chart/utils";
-
-import { formatTransactionDate } from "../analytics-chart/utils";
 import { useQuery } from "@tanstack/react-query";
-import { getPredictionOptions } from "@/libs/query/queries/statistics.queries";
+
+import { Skeleton } from "@/components/ui/skeleton";
 import { Category } from "@/libs/db/schema";
 import { Sheet } from "@/libs/db/schema";
-import { Skeleton } from "@/components/ui/skeleton";
+import { getPredictionOptions } from "@/libs/query/queries/statistics.queries";
+import { formatCurrency } from "@/shared/utils/number.util";
+
+import { extractMonth } from "../analytics-chart/utils";
+import { formatTransactionDate } from "../analytics-chart/utils";
 
 type PredictionBadgeProps = {
   sheetId: Sheet["id"];

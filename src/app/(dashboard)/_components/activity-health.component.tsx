@@ -1,8 +1,9 @@
 "use client";
+import { RadioIcon } from "lucide-react";
+
 import { SimpleTooltip } from "@/components/simple-tooltip.component";
 import { useGetActivityHealth } from "@/libs/query/queries/statistics.queries";
 import { cn } from "@/shared/utils/cn.util";
-import { RadioIcon } from "lucide-react";
 
 export const ActivityHealth: React.FC = () => {
   const { isPending, data } = useGetActivityHealth();

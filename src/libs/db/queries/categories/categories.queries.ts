@@ -1,4 +1,5 @@
 import { eq } from "drizzle-orm";
+
 import { db } from "../../drizzle";
 import { categoriesTable, Category } from "../../schema";
 import { CreateCategoriesBatchProps } from "./categories.types";

@@ -13,6 +13,8 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
+import { Sheet } from "@/libs/db/schema";
+import { useGenerateRandomTransactionsMutation } from "@/libs/query/queries/records.queries";
 import {
   GenerateRandomTransactionsSchema,
   generateRandomTransactionsSchema,
@@ -20,9 +22,7 @@ import {
 import { endOfDay, formatDate, startOfDay } from "@/shared/utils/date.util";
 
 import { CategoriesList } from "./_components/categories-list.component";
-import { Sheet } from "@/libs/db/schema";
 import { TotalInput } from "./_components/total-input.component";
-import { useGenerateRandomTransactionsMutation } from "@/libs/query/queries/records.queries";
 
 type RecordsGeneratorFormProps = {
   sheetId: Sheet["id"];

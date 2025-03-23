@@ -14,7 +14,6 @@ import { CreateRecordSchema } from "@/shared/schemas/record.schema";
 import { db } from "../../drizzle";
 import {
   categoriesTable,
-  Category,
   Record,
   recordsTable,
   Sheet,

@@ -1,8 +1,9 @@
+import { useMemo } from "react";
+import { Control, useWatch } from "react-hook-form";
+
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { GenerateRandomTransactionsSchema } from "@/shared/schemas/record.schema";
-import { useMemo } from "react";
-import { Control, useWatch } from "react-hook-form";
 
 type CategoriesListProps = {
   control: Control<GenerateRandomTransactionsSchema>;

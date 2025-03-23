@@ -3,16 +3,16 @@
 import { notFound } from "next/navigation";
 
 import { getCategoryByIdQuery } from "@/libs/db/queries/categories/categories.queries";
+import { getUserSheetQuery } from "@/libs/db/queries/sheets/sheet.queries";
 import { Category, Sheet } from "@/libs/db/schema";
-import { ActionResponse } from "@/shared/types/action.type";
 import { getServerUser } from "@/libs/supabase/utils/getServerUser.util";
+import { tryCatch } from "@/libs/try-catch/try-catch";
 import {
   fetchPredictionData,
   gatherSheetPredictionData,
 } from "@/services/statistics.service";
-import { getUserSheetQuery } from "@/libs/db/queries/sheets/sheet.queries";
-import { tryCatch } from "@/libs/try-catch/try-catch";
 import { serverEnvironment } from "@/shared/environment/server.environment";
+import { ActionResponse } from "@/shared/types/action.type";
 
 export const getPredictions = async (
   sheetId: Sheet["id"],

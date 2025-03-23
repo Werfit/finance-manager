@@ -1,10 +1,10 @@
 import { queryOptions, useQuery } from "@tanstack/react-query";
+import { useEffect } from "react";
 
 import { getCategories } from "@/app/actions/categories.actions";
+import { useToast } from "@/hooks/use-toast.hook";
 
 import { CategoriesQueryKeys } from "../constants/keys.constants";
-import { useToast } from "@/hooks/use-toast.hook";
-import { useEffect } from "react";
 
 export const getCategoriesOptions = () =>
   queryOptions({
@@ -33,6 +33,7 @@ export const useGetCategories = () => {
         title: "Error during fetching",
       });
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [state.isError]);
 
   return state;

@@ -1,5 +1,9 @@
 "use client";
 
+import { useParams } from "next/navigation";
+import { useMemo } from "react";
+import { Bar, BarChart, CartesianGrid, XAxis } from "recharts";
+
 import {
   ChartConfig,
   ChartContainer,
@@ -9,21 +13,18 @@ import {
   ChartTooltipContent,
   ChartTooltipIndicator,
 } from "@/components/ui/chart";
-import { Category } from "@/libs/db/schema";
-import { Bar, BarChart, CartesianGrid, XAxis } from "recharts";
-import { useGetRecordsByCategoryQuery } from "@/libs/query/queries/records.queries";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useParams } from "next/navigation";
+import { Category } from "@/libs/db/schema";
+import { useGetRecordsByCategoryQuery } from "@/libs/query/queries/records.queries";
+import { cn } from "@/shared/utils/cn.util";
+
 import { AnalyticsLayoutParams } from "../../../../_shared/params.types";
-import { useMemo } from "react";
 import {
   formatTransactionDate,
   preprocessChartData,
   processValuePayload,
   TransactionDate,
 } from "./utils";
-import { formatCurrency } from "@/shared/utils/number.util";
-import { cn } from "@/shared/utils/cn.util";
 
 type CategoryViewerProps = {
   categoryId: Category["id"];

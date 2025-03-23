@@ -1,6 +1,8 @@
 "use client";
 
 import { DicesIcon } from "lucide-react";
+import { useParams } from "next/navigation";
+import { useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -12,11 +14,8 @@ import {
   DrawerTrigger,
 } from "@/components/ui/drawer";
 
-import { RecordsGeneratorForm } from "./records-generator-form.component";
-import { useState } from "react";
-
 import { AnalyticsLayoutParams } from "../../../_shared/params.types";
-import { useParams } from "next/navigation";
+import { RecordsGeneratorForm } from "./records-generator-form.component";
 
 export const RecordsGenerator = () => {
   const [open, setOpen] = useState(false);

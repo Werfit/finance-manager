@@ -3,6 +3,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { ChevronLeftIcon } from "lucide-react";
 import Link from "next/link";
+import { useParams } from "next/navigation";
 
 import { SimpleTooltip } from "@/components/simple-tooltip.component";
 import { Button } from "@/components/ui/button";
@@ -10,7 +11,6 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { getSheetOptions } from "@/libs/query/queries/sheets.queries";
 
 import { AnalyticsLayoutParams } from "../../../_shared/params.types";
-import { useParams } from "next/navigation";
 
 export const AnalyticsNavigationTitle: React.FC = () => {
   const { id: sheetId } = useParams<AnalyticsLayoutParams>();

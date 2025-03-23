@@ -1,14 +1,15 @@
-import { LayoutProps } from "@/shared/types/layout.type";
-import { CategoriesList } from "./_components/analytics-viewer/categories-list.component";
 import {
   dehydrate,
   HydrationBoundary,
   QueryClient,
 } from "@tanstack/react-query";
-import { getSheetOptions } from "@/libs/query/queries/sheets.queries";
 
-import { AnalyticsNavigation } from "./_components/navigation/analytics-navigation.component";
+import { getSheetOptions } from "@/libs/query/queries/sheets.queries";
+import { LayoutProps } from "@/shared/types/layout.type";
+
 import { AnalyticsLayoutParams } from "../_shared/params.types";
+import { CategoriesList } from "./_components/analytics-viewer/categories-list.component";
+import { AnalyticsNavigation } from "./_components/navigation/analytics-navigation.component";
 
 const Layout: React.FC<LayoutProps<AnalyticsLayoutParams>> = async ({
   children,

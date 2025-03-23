@@ -1,6 +1,7 @@
+import { ValueType } from "recharts/types/component/DefaultTooltipContent";
+
 import { Record as RecordType } from "@/libs/db/schema";
 import { formatCurrency } from "@/shared/utils/number.util";
-import { ValueType } from "recharts/types/component/DefaultTooltipContent";
 
 export type TransactionDate = `${string}-${string}`;
 

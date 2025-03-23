@@ -1,6 +1,8 @@
 import { MinusIcon } from "lucide-react";
-import { useId, useState } from "react";
+import { useId } from "react";
+import { Control } from "react-hook-form";
 
+import { MinMaxInput } from "@/components/min-max-input.component";
 import { SimpleTooltip } from "@/components/simple-tooltip.component";
 import {
   Accordion,
@@ -9,12 +11,6 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 import { Button } from "@/components/ui/button";
-import { Category } from "@/libs/db/schema";
-import {
-  GenerateRandomTransactionsSchema,
-  RangeObject,
-} from "@/shared/schemas/record.schema";
-import { Control } from "react-hook-form";
 import {
   FormControl,
   FormDescription,
@@ -23,7 +19,9 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import { MinMaxInput } from "@/components/min-max-input.component";
+import { Category } from "@/libs/db/schema";
+import { GenerateRandomTransactionsSchema } from "@/shared/schemas/record.schema";
+
 import { extractCategoryError } from "./utils/extract-category-error.util";
 
 type CategoryInputProps = {

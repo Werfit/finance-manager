@@ -1,16 +1,17 @@
-import { Category, Sheet } from "@/libs/db/schema";
-import { PageProps } from "@/shared/types/layout.type";
-
-import { CategoryAnalyticsChart } from "./_components/analytics-chart/category-analytics-chart.component";
 import {
   dehydrate,
   HydrationBoundary,
   QueryClient,
 } from "@tanstack/react-query";
-import { getCategoryRecordsOptions } from "@/libs/query/queries/records.queries";
-import { Button } from "@/components/ui/button";
 import { CheckIcon, XIcon } from "lucide-react";
+
 import { SimpleTooltip } from "@/components/simple-tooltip.component";
+import { Button } from "@/components/ui/button";
+import { Category, Sheet } from "@/libs/db/schema";
+import { getCategoryRecordsOptions } from "@/libs/query/queries/records.queries";
+import { PageProps } from "@/shared/types/layout.type";
+
+import { CategoryAnalyticsChart } from "./_components/analytics-chart/category-analytics-chart.component";
 import { PredictionBadge } from "./_components/prediction-badge/prediction-badge.component";
 
 const Page: React.FC<

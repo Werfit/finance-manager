@@ -1,9 +1,11 @@
 "use client";
 
-import { Skeleton } from "@/components/ui/skeleton";
-import { useGetCategories } from "@/libs/query/queries/categories.queries";
 import Link from "next/link";
 import { useParams } from "next/navigation";
+
+import { Skeleton } from "@/components/ui/skeleton";
+import { useGetCategories } from "@/libs/query/queries/categories.queries";
+
 import { AnalyticsLayoutParams } from "../../../_shared/params.types";
 
 export const CategoriesList = () => {
