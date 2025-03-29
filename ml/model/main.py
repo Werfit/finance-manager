@@ -2,58 +2,211 @@ import pandas as pd
 import lightgbm as lgb
 import optuna
 import numpy as np
-from sklearn.model_selection import train_test_split
 from sklearn.metrics import mean_absolute_error
+import shap
+from typing import List, Dict, Tuple, Any, Optional
+import matplotlib.pyplot as plt
 
-# Load original dataset
-df = pd.read_csv("./datasets/synthetic-dataset-expanded.csv")
-
-# Parse and sort
-df["year_month"] = pd.to_datetime(df["year_month"])
-df = df.sort_values(["sheet_id", "category_id", "year_month"])
-
-# Compute target: category spend as % of sheet
-df["next_category_spent"] = df.groupby(["sheet_id", "category_id"])[
-    "total_spent"].shift(-1)
-df["next_sheet_spent"] = df.groupby(
-    "sheet_id")["total_spent_in_sheet_last_month"].shift(-1)
-df["target"] = df["next_category_spent"] / df["next_sheet_spent"]
-
-# Clean up
-df = df.replace([np.inf, -np.inf], np.nan)
-df = df.dropna(subset=["target"])
-
-# ✅ In-memory oversampling: amplify rare target > 1 cases
-df_rare = df[df["target"] > 1]
-df_balanced = pd.concat(
-    [df, df_rare.sample(frac=5, replace=True)], ignore_index=True)
-
-# Feature columns
-feature_cols = [
-    "total_spent",
-    "total_spent_in_sheet_last_month",
-    "total_spent_in_sheet_last_3_months",
-    "average_spent_in_sheet_last_6_months",
-    "sheet_spending_trend",
-    "total_spent_in_category_last_month",
-    "total_spent_in_category_last_3_months",
-    "average_spent_in_category_last_6_months",
-    "category_spending_trend",
-    "category_spent_percentage_last_month",
-    "category_spent_percentage_trend",
-]
-
-X = df_balanced[feature_cols]
-y = df_balanced["target"]
-
-# Train/valid split
-X_train, X_valid, y_train, y_valid = train_test_split(
-    X, y, test_size=0.2, random_state=42)
-
-# Optuna objective
+# Global variable for feature columns
+feature_cols: List[str] = []
 
 
-def objective(trial):
+def load_and_prepare_data(file_path: str) -> pd.DataFrame:
+    """
+    Load the dataset and perform initial preprocessing steps.
+
+    Args:
+        file_path: Path to the CSV file containing the dataset
+
+    Returns:
+        DataFrame with initial preprocessing applied
+    """
+    # Load original dataset
+    df = pd.read_csv(file_path)
+
+    # Parse and sort
+    df["year_month"] = pd.to_datetime(df["year_month"])
+    df = df.sort_values(["sheet_id", "category_id", "year_month"])
+
+    return df
+
+
+def compute_target_variable(df: pd.DataFrame) -> pd.DataFrame:
+    """
+    Compute the target variable: category spend as percentage of sheet.
+
+    Args:
+        df: Input DataFrame
+
+    Returns:
+        DataFrame with target variable added
+    """
+    # Compute next month's values for category and sheet spending
+    df["next_category_spent"] = df.groupby(["sheet_id", "category_id"])[
+        "total_spent"].shift(-1)
+    df["next_sheet_spent"] = df.groupby(
+        "sheet_id")["total_spent_in_sheet_last_month"].shift(-1)
+
+    # Calculate target as ratio
+    df["target"] = df["next_category_spent"] / df["next_sheet_spent"]
+
+    # Clean up
+    df = df.replace([np.inf, -np.inf], np.nan)
+    df = df.dropna(subset=["target"])
+
+    return df
+
+
+def balance_dataset(df: pd.DataFrame) -> pd.DataFrame:
+    """
+    Balance the dataset by oversampling rare cases where target > 1.
+
+    Args:
+        df: Input DataFrame
+
+    Returns:
+        Balanced DataFrame
+    """
+    df_rare = df[df["target"] > 1]
+    df_balanced = pd.concat(
+        [df, df_rare.sample(frac=5, replace=True)], ignore_index=True)
+    return df_balanced
+
+
+def create_lag_features(df: pd.DataFrame, lag_periods: List[int]) -> pd.DataFrame:
+    """
+    Create lag features for both category and sheet spending.
+
+    Args:
+        df: Input DataFrame
+        lag_periods: List of lag periods to create
+
+    Returns:
+        DataFrame with lag features added
+    """
+    for lag in lag_periods:
+        df[f'category_spent_lag_{lag}'] = df.groupby(['sheet_id', 'category_id'])[
+            'total_spent'].shift(lag)
+        df[f'sheet_spent_lag_{lag}'] = df.groupby(
+            ['sheet_id'])['total_spent_in_sheet_last_month'].shift(lag)
+    return df
+
+
+def create_rolling_statistics(df: pd.DataFrame, windows: List[int]) -> pd.DataFrame:
+    """
+    Create rolling statistics (mean, std) for different time windows.
+
+    Args:
+        df: Input DataFrame
+        windows: List of window sizes for rolling calculations
+
+    Returns:
+        DataFrame with rolling statistics added
+    """
+    for window_size in windows:
+        # Category level
+        df[f'category_rolling_mean_{window_size}m'] = df.groupby(['sheet_id', 'category_id'])['total_spent'].transform(
+            lambda x: x.rolling(window_size, min_periods=1).mean()
+        )
+        df[f'category_rolling_std_{window_size}m'] = df.groupby(['sheet_id', 'category_id'])['total_spent'].transform(
+            lambda x: x.rolling(window_size, min_periods=1).std()
+        )
+
+        # Sheet level
+        df[f'sheet_rolling_mean_{window_size}m'] = df.groupby(['sheet_id'])['total_spent_in_sheet_last_month'].transform(
+            lambda x: x.rolling(window_size, min_periods=1).mean()
+        )
+    return df
+
+
+def create_cross_cutting_features(df: pd.DataFrame, windows: List[int]) -> pd.DataFrame:
+    """
+    Create cross-cutting average features across sheets and categories.
+
+    Args:
+        df: Input DataFrame
+        windows: List of window sizes for rolling calculations
+
+    Returns:
+        DataFrame with cross-cutting features added
+    """
+    # 1. Average across all categories for each sheet
+    df['sheet_category_avg'] = df.groupby(['sheet_id', 'year_month'])[
+        'total_spent'].transform('mean')
+
+    # 2. Average across all sheets for each category
+    df['category_sheet_avg'] = df.groupby(['category_id', 'year_month'])[
+        'total_spent'].transform('mean')
+
+    # 3. Rolling average of cross-cutting features
+    for window_size in windows:
+        # Rolling average of sheet-category averages
+        df[f'sheet_category_rolling_avg_{window_size}m'] = df.groupby('sheet_id')['sheet_category_avg'].transform(
+            lambda x: x.rolling(window_size, min_periods=1).mean()
+        )
+
+        # Rolling average of category-sheet averages
+        df[f'category_sheet_rolling_avg_{window_size}m'] = df.groupby('category_id')['category_sheet_avg'].transform(
+            lambda x: x.rolling(window_size, min_periods=1).mean()
+        )
+
+    return df
+
+
+def add_time_features(df: pd.DataFrame) -> pd.DataFrame:
+    """
+    Add time-based features (month, quarter, year) from the year_month column.
+
+    Args:
+        df: Input DataFrame
+
+    Returns:
+        DataFrame with time features added
+    """
+    df['month'] = df['year_month'].dt.month
+    df['quarter'] = df['year_month'].dt.quarter
+    df['year'] = df['year_month'].dt.year
+    return df
+
+
+def create_time_aware_split(df: pd.DataFrame, validation_months: int = 3) -> Tuple[pd.DataFrame, pd.DataFrame, pd.Series, pd.Series]:
+    """
+    Create time-aware train/validation split.
+
+    Args:
+        df: Input DataFrame
+        validation_months: Number of months to use for validation
+
+    Returns:
+        Tuple of (X_train, X_valid, y_train, y_valid)
+    """
+    train_end_date = df['year_month'].max(
+    ) - pd.DateOffset(months=validation_months)
+    train_mask = df['year_month'] <= train_end_date
+
+    X_train = df[train_mask][feature_cols]
+    y_train = df[train_mask]['target']
+    X_valid = df[~train_mask][feature_cols]
+    y_valid = df[~train_mask]['target']
+
+    return X_train, X_valid, y_train, y_valid
+
+
+def objective(trial: optuna.Trial, X_train: pd.DataFrame, y_train: pd.Series,
+              X_valid: pd.DataFrame, y_valid: pd.Series) -> float:
+    """
+    Optuna objective function for hyperparameter optimization.
+
+    Args:
+        trial: Optuna trial object
+        X_train: Training features
+        y_train: Training target
+        X_valid: Validation features
+        y_valid: Validation target
+
+    Returns:
+        MAE score for the trial
+    """
     params = {
         "objective": "regression",
         "metric": "mae",
@@ -66,6 +219,8 @@ def objective(trial):
         "bagging_fraction": trial.suggest_float("bagging_fraction", 0.6, 1.0),
         "bagging_freq": trial.suggest_int("bagging_freq", 1, 7),
         "min_child_samples": trial.suggest_int("min_child_samples", 5, 50),
+        "max_bin": 512,
+        "min_data_in_leaf": 50,
     }
 
     model = lgb.LGBMRegressor(**params)
@@ -83,17 +238,130 @@ def objective(trial):
     return mean_absolute_error(y_valid, preds)
 
 
-# Run Optuna
-study = optuna.create_study(direction="minimize")
-study.optimize(objective, n_trials=50)
+def evaluate_predictions(y_true: pd.Series, y_pred: np.ndarray, dates: pd.Series) -> Dict[str, float]:
+    """
+    Evaluate predictions using time-aware metrics.
 
-print("Best MAE:", study.best_value)
-print("Best params:", study.best_params)
+    Args:
+        y_true: True values
+        y_pred: Predicted values
+        dates: Dates corresponding to the predictions
 
-# Final training on all oversampled data
-final_model = lgb.LGBMRegressor(**study.best_params)
-final_model.fit(X, y)
+    Returns:
+        Dictionary of evaluation metrics
+    """
+    # Convert predictions to pandas Series with same index as y_true
+    y_pred_series = pd.Series(y_pred, index=y_true.index)
 
-# Save model
-final_model.booster_.save_model("./models/lgbm_model_percentage.txt")
-print("✅ Final model saved to ./models/lgbm_model_percentage.txt")
+    # Calculate recent dates threshold
+    recent_threshold = dates.quantile(0.8)
+
+    # Create mask for recent dates
+    recent_mask = dates > recent_threshold
+
+    results = {
+        'Overall MAE': mean_absolute_error(y_true, y_pred),
+        'Recent MAE': mean_absolute_error(
+            y_true[recent_mask],
+            y_pred_series[recent_mask]
+        )
+    }
+    return results
+
+
+def main() -> None:
+    """
+    Main function to orchestrate the model training pipeline.
+    """
+    # Define feature columns
+    global feature_cols
+    feature_cols = [
+        "total_spent",
+        "total_spent_in_sheet_last_month",
+        "total_spent_in_sheet_last_3_months",
+        "average_spent_in_sheet_last_6_months",
+        "sheet_spending_trend",
+        "total_spent_in_category_last_month",
+        "total_spent_in_category_last_3_months",
+        "average_spent_in_category_last_6_months",
+        "category_spending_trend",
+        "category_spent_percentage_last_month",
+        "category_spent_percentage_trend",
+    ]
+
+    # Load and prepare data
+    df = load_and_prepare_data("./datasets/synthetic-dataset-expanded.csv")
+
+    # Compute target variable
+    df = compute_target_variable(df)
+
+    # Balance dataset
+    df_balanced = balance_dataset(df)
+
+    # Create features
+    df_balanced = create_lag_features(
+        df_balanced, lag_periods=[1, 2, 3, 6, 12])
+    df_balanced = create_rolling_statistics(df_balanced, windows=[3, 6, 12])
+    df_balanced = create_cross_cutting_features(
+        df_balanced, windows=[3, 6, 12])
+    df_balanced = add_time_features(df_balanced)
+
+    # Prepare data for modeling
+    X = df_balanced[feature_cols]
+    y = df_balanced["target"]
+
+    # Create time-aware split
+    X_train, X_valid, y_train, y_valid = create_time_aware_split(df_balanced)
+
+    # Run Optuna optimization
+    study = optuna.create_study(direction="minimize")
+    study.optimize(
+        lambda trial: objective(trial, X_train, y_train, X_valid, y_valid),
+        n_trials=50
+    )
+
+    print("Best MAE:", study.best_value)
+    print("Best params:", study.best_params)
+
+    # Train final model
+    final_model = lgb.LGBMRegressor(**study.best_params)
+    final_model.fit(X, y)
+
+    # Make predictions on validation set
+    y_pred = final_model.predict(X_valid)
+
+    # Evaluate model performance
+    validation_dates = df_balanced[~df_balanced['year_month'].isin(
+        X_train.index)]['year_month']
+    evaluation_results = evaluate_predictions(
+        y_valid, y_pred, validation_dates)
+    print("\nModel Evaluation Results:")
+    for metric, value in evaluation_results.items():
+        print(f"{metric}: {value:.4f}")
+
+    # Calculate and display feature importance
+    feature_importance = pd.DataFrame({
+        'feature': feature_cols,
+        'importance': final_model.feature_importances_
+    }).sort_values('importance', ascending=False)
+
+    print("\nTop 10 Most Important Features:")
+    print(feature_importance.head(10))
+
+    # Calculate and display SHAP values
+    explainer = shap.TreeExplainer(final_model)
+    shap_values = explainer.shap_values(X_valid)
+
+    # Plot SHAP summary
+    print("\nGenerating SHAP summary plot...")
+    shap.summary_plot(shap_values, X_valid, plot_type="bar", show=False)
+    plt.savefig("./models/shap_summary.png")
+    plt.close()
+
+    # Save model
+    final_model.booster_.save_model("./models/lgbm_model_percentage.txt")
+    print("✅ Final model saved to ./models/lgbm_model_percentage.txt")
+
+
+if __name__ == "__main__":
+    main()
