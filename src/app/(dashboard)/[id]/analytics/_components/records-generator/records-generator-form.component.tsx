@@ -37,7 +37,7 @@ export const RecordsGeneratorForm: React.FC<RecordsGeneratorFormProps> = ({
     resolver: zodResolver(generateRandomTransactionsSchema),
     defaultValues: {
       categories: [],
-      total: 100,
+
       period: {
         from: startOfDay(new Date()),
         to: endOfDay(new Date()),

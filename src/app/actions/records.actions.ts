@@ -180,7 +180,6 @@ export const generateRandomTransactions = async (
         ...generateCategoryRandomTransactions({
           amount: category.amount,
           frequency: category.frequency,
-          totalTransactions: data.total,
           period: data.period,
           categoryId: category.categoryId,
           sheetId: sheet.id,

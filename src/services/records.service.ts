@@ -18,7 +18,6 @@ type DateRange = {
 type GenerateRandomTransactionsProps = {
   amount: NumberRange;
   frequency: NumberRange;
-  totalTransactions: number; // Added total transactions constraint
   period: DateRange;
   categoryId: Category["id"];
   sheetId: Sheet["id"];
@@ -27,22 +26,20 @@ type GenerateRandomTransactionsProps = {
 export const generateCategoryRandomTransactions = ({
   amount: amountRange,
   frequency: frequencyRange,
-  totalTransactions,
   categoryId,
   period,
   sheetId,
 }: GenerateRandomTransactionsProps) => {
   const months = Math.max(differenceInMonths(period.from, period.to), 1);
 
-  let remainingTransactions = totalTransactions;
   const records: Omit<Record, "id">[] = [];
   let indexDate = period.from;
 
   for (let month = 0; month < months; month++) {
     const upcomingMonth = nextMonth(indexDate);
 
-    const maxFrequency = Math.min(frequencyRange.max, remainingTransactions);
-    const minFrequency = Math.min(frequencyRange.min, remainingTransactions);
+    const maxFrequency = frequencyRange.max;
+    const minFrequency = frequencyRange.min;
     const frequency = generateRandomNumber(minFrequency, maxFrequency);
 
     for (let i = 0; i < frequency; i++) {
@@ -53,9 +50,6 @@ export const generateCategoryRandomTransactions = ({
         createdAt: generateRandomDate(indexDate, upcomingMonth),
       });
     }
-
-    remainingTransactions -= frequency;
-    if (remainingTransactions <= 0) break;
 
     indexDate = upcomingMonth;
   }

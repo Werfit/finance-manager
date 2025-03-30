@@ -1,10 +1,11 @@
+from typing import List, Dict, Tuple
+
 import pandas as pd
 import lightgbm as lgb
 import optuna
 import numpy as np
 from sklearn.metrics import mean_absolute_error
 import shap
-from typing import List, Dict, Tuple, Any, Optional
 import matplotlib.pyplot as plt
 
 # Global variable for feature columns
@@ -194,48 +195,63 @@ def create_time_aware_split(df: pd.DataFrame, validation_months: int = 3) -> Tup
 
 def objective(trial: optuna.Trial, X_train: pd.DataFrame, y_train: pd.Series,
               X_valid: pd.DataFrame, y_valid: pd.Series) -> float:
-    """
-    Optuna objective function for hyperparameter optimization.
-
-    Args:
-        trial: Optuna trial object
-        X_train: Training features
-        y_train: Training target
-        X_valid: Validation features
-        y_valid: Validation target
-
-    Returns:
-        MAE score for the trial
-    """
     params = {
         "objective": "regression",
         "metric": "mae",
-        "boosting_type": "gbdt",
+        "boosting_type": trial.suggest_categorical("boosting_type", ["gbdt", "dart"]),
         "verbosity": -1,
-        "max_depth": trial.suggest_int("max_depth", 3, 10),
-        "num_leaves": trial.suggest_int("num_leaves", 15, 100),
-        "learning_rate": trial.suggest_float("learning_rate", 0.01, 0.3, log=True),
-        "feature_fraction": trial.suggest_float("feature_fraction", 0.6, 1.0),
-        "bagging_fraction": trial.suggest_float("bagging_fraction", 0.6, 1.0),
-        "bagging_freq": trial.suggest_int("bagging_freq", 1, 7),
-        "min_child_samples": trial.suggest_int("min_child_samples", 5, 50),
-        "max_bin": 512,
-        "min_data_in_leaf": 50,
+        # More granular hyperparameter ranges
+        "max_depth": trial.suggest_int("max_depth", 4, 12),
+        "num_leaves": trial.suggest_int("num_leaves", 20, 150),
+        "learning_rate": trial.suggest_float("learning_rate", 0.005, 0.2, log=True),
+        "feature_fraction": trial.suggest_float("feature_fraction", 0.5, 1.0),
+        "bagging_fraction": trial.suggest_float("bagging_fraction", 0.5, 1.0),
+        "bagging_freq": trial.suggest_int("bagging_freq", 1, 10),
+        "min_child_samples": trial.suggest_int("min_child_samples", 5, 100),
+        "max_bin": trial.suggest_int("max_bin", 200, 1000),
+        "min_data_in_leaf": trial.suggest_int("min_data_in_leaf", 5, 200),
+        "lambda_l1": trial.suggest_float("lambda_l1", 1e-8, 10.0, log=True),
+        "lambda_l2": trial.suggest_float("lambda_l2", 1e-8, 10.0, log=True),
+        "min_gain_to_split": trial.suggest_float("min_gain_to_split", 1e-8, 1.0, log=True),
+        # Additional parameters
+        "max_cat_threshold": trial.suggest_int("max_cat_threshold", 16, 64),
+        "cat_l2": trial.suggest_float("cat_l2", 1.0, 10.0),
+        "cat_smooth": trial.suggest_float("cat_smooth", 1.0, 10.0),
+        "n_estimators": trial.suggest_int("n_estimators", 500, 3000)
     }
 
+    # Train with more epochs and stricter early stopping
     model = lgb.LGBMRegressor(**params)
     model.fit(
         X_train,
         y_train,
-        eval_set=[(X_valid, y_valid)],
+        eval_set=[(X_train, y_train), (X_valid, y_valid)],
+        eval_metric=['mae', 'rmse'],
         callbacks=[
-            lgb.early_stopping(20),
-            lgb.log_evaluation(0)
-        ]
+            lgb.early_stopping(100),  # Increased from 50 to 100
+            lgb.log_evaluation(100)
+        ],
     )
 
-    preds = model.predict(X_valid)
-    return mean_absolute_error(y_valid, preds)
+    # Use multiple evaluation metrics
+    predictions = model.predict(X_valid)
+    mae_score = mean_absolute_error(y_valid, predictions)
+
+    # Weight recent predictions more heavily (last 20% of data)
+    recent_mask = y_valid.index >= y_valid.index[int(len(y_valid) * 0.8)]
+    recent_mae = mean_absolute_error(
+        y_valid[recent_mask], predictions[recent_mask])
+
+    # Add stability metric
+    stability_score = np.std(predictions) / np.std(y_valid)
+
+    # Combined score (weighted average of different metrics)
+    final_score = (0.4 * mae_score +
+                   0.4 * recent_mae +
+                   # Penalize both under and over-variation
+                   0.2 * abs(1 - stability_score))
+
+    return final_score
 
 
 def evaluate_predictions(y_true: pd.Series, y_pred: np.ndarray, dates: pd.Series) -> Dict[str, float]:
@@ -269,9 +285,37 @@ def evaluate_predictions(y_true: pd.Series, y_pred: np.ndarray, dates: pd.Series
     return results
 
 
-def main() -> None:
+def create_exponential_smoothing_features(df: pd.DataFrame, alphas: List[float]) -> pd.DataFrame:
+    """
+    Create exponential smoothing features for both category and sheet spending.
+
+    Args:
+        df: Input DataFrame
+        alphas: List of smoothing factors (between 0 and 1)
+
+    Returns:
+        DataFrame with exponential smoothing features added
+    """
+    for alpha in alphas:
+        # Category level exponential smoothing
+        df[f'category_exp_smooth_{alpha}'] = df.groupby(['sheet_id', 'category_id'])['total_spent'].transform(
+            lambda x: x.ewm(alpha=alpha, adjust=False).mean()
+        )
+
+        # Sheet level exponential smoothing
+        df[f'sheet_exp_smooth_{alpha}'] = df.groupby(['sheet_id'])['total_spent_in_sheet_last_month'].transform(
+            lambda x: x.ewm(alpha=alpha, adjust=False).mean()
+        )
+    return df
+
+
+def main(dataset_path: str, model_path: str) -> None:
     """
     Main function to orchestrate the model training pipeline.
+
+    Args:
+        dataset_path: Path to the dataset
+        model_path: Path to save the model
     """
     # Define feature columns
     global feature_cols
@@ -290,7 +334,7 @@ def main() -> None:
     ]
 
     # Load and prepare data
-    df = load_and_prepare_data("./datasets/synthetic-dataset-expanded.csv")
+    df = load_and_prepare_data(dataset_path)
 
     # Compute target variable
     df = compute_target_variable(df)
@@ -302,30 +346,51 @@ def main() -> None:
     df_balanced = create_lag_features(
         df_balanced, lag_periods=[1, 2, 3, 6, 12])
     df_balanced = create_rolling_statistics(df_balanced, windows=[3, 6, 12])
+    df_balanced = create_exponential_smoothing_features(
+        df_balanced, alphas=[0.2, 0.4, 0.6])
     df_balanced = create_cross_cutting_features(
         df_balanced, windows=[3, 6, 12])
     df_balanced = add_time_features(df_balanced)
 
-    # Prepare data for modeling
-    X = df_balanced[feature_cols]
-    y = df_balanced["target"]
-
     # Create time-aware split
     X_train, X_valid, y_train, y_valid = create_time_aware_split(df_balanced)
 
-    # Run Optuna optimization
-    study = optuna.create_study(direction="minimize")
+    # Run Optuna optimization with more trials and better sampling
+    study = optuna.create_study(
+        direction="minimize",
+        sampler=optuna.samplers.TPESampler(
+            n_startup_trials=25,  # Number of random trials before TPE
+            multivariate=True,  # Consider parameter relationships
+            seed=42
+        )
+    )
+
     study.optimize(
         lambda trial: objective(trial, X_train, y_train, X_valid, y_valid),
-        n_trials=50
+        n_trials=300,  # Increased from 200
+        timeout=7200,  # Increased to 2 hours
+        show_progress_bar=True,
+        n_jobs=-1  # Use all available cores
     )
 
     print("Best MAE:", study.best_value)
     print("Best params:", study.best_params)
 
-    # Train final model
-    final_model = lgb.LGBMRegressor(**study.best_params)
-    final_model.fit(X, y)
+    # Train final model with cross-validation
+    final_params = study.best_params
+    final_params['n_estimators'] = 2000  # Use more trees for final model
+
+    final_model = lgb.LGBMRegressor(**final_params)
+    final_model.fit(
+        X_train,
+        y_train,
+        eval_set=[(X_valid, y_valid)],
+        eval_metric=['mae', 'rmse'],
+        callbacks=[
+            lgb.early_stopping(100),
+            lgb.log_evaluation(100)
+        ],
+    )
 
     # Make predictions on validation set
     y_pred = final_model.predict(X_valid)
@@ -359,9 +424,10 @@ def main() -> None:
     plt.close()
 
     # Save model
-    final_model.booster_.save_model("./models/lgbm_model_percentage.txt")
-    print("✅ Final model saved to ./models/lgbm_model_percentage.txt")
+    final_model.booster_.save_model(model_path)
+    print(f"✅ Final model saved to {model_path}")
 
 
 if __name__ == "__main__":
-    main()
+    main(dataset_path="./datasets/synthetic-dataset-expanded-v2.csv",
+         model_path="./models/lgbm_model_percentage_v2.txt")

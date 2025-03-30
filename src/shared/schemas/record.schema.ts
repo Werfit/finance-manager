@@ -60,45 +60,24 @@ export const rangeObject = z
 
 export type RangeObject = z.infer<typeof rangeObject>;
 
-export const generateRandomTransactionsSchema = z
-  .object({
-    total: z.number().positive("Amount must be greater than 0"),
-    period: z
-      .object({
-        from: z.date(),
-        to: z.date(),
-      })
-      .refine(({ from, to }) => from.getTime() < to.getTime(), {
-        path: [],
-        message: "Incorrect period range",
-      }),
-    categories: z.array(
-      z.object({
-        categoryId: z.string().uuid("Incorrect category selected"),
-        amount: rangeObject,
-        frequency: rangeObject,
-      })
-    ),
-  })
-  .refine(
-    ({ total, categories }) => {
-      const minSum = categories.reduce(
-        (sum, category) => sum + category.frequency.min,
-        0
-      );
-      const maxSum = categories.reduce(
-        (sum, category) => sum + category.frequency.max,
-        0
-      );
-
-      return total > minSum && total >= maxSum;
-    },
-    {
-      message:
-        "Total amount must be bigger than sum of the categories min/max values",
-      path: ["total"],
-    }
-  );
+export const generateRandomTransactionsSchema = z.object({
+  period: z
+    .object({
+      from: z.date(),
+      to: z.date(),
+    })
+    .refine(({ from, to }) => from.getTime() < to.getTime(), {
+      path: [],
+      message: "Incorrect period range",
+    }),
+  categories: z.array(
+    z.object({
+      categoryId: z.string().uuid("Incorrect category selected"),
+      amount: rangeObject,
+      frequency: rangeObject,
+    })
+  ),
+});
 
 export type GenerateRandomTransactionsSchema = z.infer<
   typeof generateRandomTransactionsSchema
