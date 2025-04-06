@@ -7,6 +7,9 @@ import numpy as np
 from sklearn.metrics import mean_absolute_error
 import shap
 import matplotlib.pyplot as plt
+from statsmodels.tsa.stattools import adfuller
+import warnings
+warnings.filterwarnings('ignore')
 
 # Global variable for feature columns
 feature_cols: List[str] = []
@@ -170,12 +173,13 @@ def add_time_features(df: pd.DataFrame) -> pd.DataFrame:
     return df
 
 
-def create_time_aware_split(df: pd.DataFrame, validation_months: int = 3) -> Tuple[pd.DataFrame, pd.DataFrame, pd.Series, pd.Series]:
+def create_time_aware_split(df: pd.DataFrame, features: List[str] = None, validation_months: int = 3) -> Tuple[pd.DataFrame, pd.DataFrame, pd.Series, pd.Series]:
     """
     Create time-aware train/validation split.
 
     Args:
         df: Input DataFrame
+        features: List of features to use for training. If None, uses global feature_cols
         validation_months: Number of months to use for validation
 
     Returns:
@@ -185,9 +189,12 @@ def create_time_aware_split(df: pd.DataFrame, validation_months: int = 3) -> Tup
     ) - pd.DateOffset(months=validation_months)
     train_mask = df['year_month'] <= train_end_date
 
-    X_train = df[train_mask][feature_cols]
+    # Use provided features or fall back to global feature_cols
+    features_to_use = features if features is not None else feature_cols
+
+    X_train = df[train_mask][features_to_use]
     y_train = df[train_mask]['target']
-    X_valid = df[~train_mask][feature_cols]
+    X_valid = df[~train_mask][features_to_use]
     y_valid = df[~train_mask]['target']
 
     return X_train, X_valid, y_train, y_valid
@@ -309,6 +316,107 @@ def create_exponential_smoothing_features(df: pd.DataFrame, alphas: List[float])
     return df
 
 
+def check_stationarity(series: pd.Series, significance_level: float = 0.01) -> Tuple[bool, float]:
+    """
+    Check if a time series is stationary using Augmented Dickey-Fuller test.
+    Using a more conservative significance level (0.01 instead of 0.05).
+
+    Args:
+        series: Time series to test
+        significance_level: Significance level for the test
+
+    Returns:
+        Tuple of (is_stationary, p_value)
+    """
+    result = adfuller(series.dropna())
+    p_value = result[1]
+    is_stationary = p_value < significance_level
+    return is_stationary, p_value
+
+
+def transform_non_stationary_features(df: pd.DataFrame, feature_columns: List[str]) -> Tuple[pd.DataFrame, List[str]]:
+    """
+    Transform non-stationary features using appropriate transformations based on feature type.
+    More conservative approach to transformations.
+
+    Args:
+        df: Input DataFrame
+        feature_columns: List of feature columns to check for stationarity
+
+    Returns:
+        Tuple of (transformed DataFrame, list of transformed feature names)
+    """
+    # Create a copy to avoid modifying the original DataFrame
+    df_transformed = df.copy()
+
+    # Dictionary to store stationarity results
+    stationarity_results = {}
+    transformed_features = []
+
+    # Define feature types
+    trend_features = [col for col in feature_columns if col.endswith('_trend')]
+    percentage_features = [
+        col for col in feature_columns if 'percentage' in col]
+    amount_features = [col for col in feature_columns
+                       if col not in trend_features
+                       and col not in percentage_features]
+
+    # Check each feature for stationarity
+    for col in feature_columns:
+        # Skip trend features as they are categorical (-1, 0, 1)
+        if col in trend_features:
+            print(f"Skipping {col} - trend feature")
+            continue
+
+        # Handle percentage features differently
+        if col in percentage_features:
+            # Check stationarity
+            is_stationary, p_value = check_stationarity(df[col])
+            stationarity_results[col] = {
+                'is_stationary': is_stationary,
+                'p_value': p_value
+            }
+
+            # For percentage features, we can use logit transformation
+            if not is_stationary and p_value < 0.1:  # More conservative threshold
+                print(f"Transforming {col} (p-value: {p_value:.4f})")
+                # Add small constant to avoid log(0)
+                transformed_col = f'{col}_logit'
+                df_transformed[transformed_col] = np.log(
+                    (df[col] + 1e-6) / (1 - df[col] + 1e-6))
+                transformed_features.append(transformed_col)
+            continue
+
+        # Handle amount features
+        if col in amount_features:
+            # Skip if column contains negative values
+            if (df[col] < 0).any():
+                print(f"Skipping {col} - contains negative values")
+                continue
+
+            # Check stationarity
+            is_stationary, p_value = check_stationarity(df[col])
+            stationarity_results[col] = {
+                'is_stationary': is_stationary,
+                'p_value': p_value
+            }
+
+            # Apply log transformation if non-stationary
+            if not is_stationary and p_value < 0.1:  # More conservative threshold
+                print(f"Transforming {col} (p-value: {p_value:.4f})")
+                transformed_col = f'{col}_log'
+                df_transformed[transformed_col] = np.log1p(df[col])
+                transformed_features.append(transformed_col)
+
+    # Print stationarity summary
+    print("\nStationarity Analysis Summary:")
+    for col, results in stationarity_results.items():
+        status = "Stationary" if results['is_stationary'] else "Non-Stationary"
+        print(f"{col}: {status} (p-value: {results['p_value']:.4f})")
+
+    return df_transformed, transformed_features
+
+
 def main(dataset_path: str, model_path: str) -> None:
     """
     Main function to orchestrate the model training pipeline.
@@ -352,8 +460,15 @@ def main(dataset_path: str, model_path: str) -> None:
         df_balanced, windows=[3, 6, 12])
     df_balanced = add_time_features(df_balanced)
 
-    # Create time-aware split
-    X_train, X_valid, y_train, y_valid = create_time_aware_split(df_balanced)
+    # Apply stationarity analysis and transformations
+    print("\nPerforming stationarity analysis...")
+    df_balanced, transformed_features = transform_non_stationary_features(
+        df_balanced, feature_cols)
+
+    # Create time-aware split using both original and transformed features
+    all_features = feature_cols + transformed_features
+    X_train, X_valid, y_train, y_valid = create_time_aware_split(
+        df_balanced, all_features)
 
     # Run Optuna optimization with more trials and better sampling
     study = optuna.create_study(
@@ -379,6 +494,8 @@ def main(dataset_path: str, model_path: str) -> None:
     # Train final model with cross-validation
     final_params = study.best_params
     final_params['n_estimators'] = 2000  # Use more trees for final model
+    final_params['early_stopping_rounds'] = 200  # Increased from 100
+    final_params['learning_rate'] = 0.01  # Reduced learning rate
 
     final_model = lgb.LGBMRegressor(**final_params)
     final_model.fit(
@@ -387,7 +504,7 @@ def main(dataset_path: str, model_path: str) -> None:
         eval_set=[(X_valid, y_valid)],
         eval_metric=['mae', 'rmse'],
         callbacks=[
-            lgb.early_stopping(100),
+            lgb.early_stopping(200),  # Increased from 100
             lgb.log_evaluation(100)
         ],
     )
@@ -406,7 +523,7 @@ def main(dataset_path: str, model_path: str) -> None:
 
     # Calculate and display feature importance
     feature_importance = pd.DataFrame({
-        'feature': feature_cols,
+        'feature': all_features,
         'importance': final_model.feature_importances_
     }).sort_values('importance', ascending=False)
 

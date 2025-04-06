@@ -10,7 +10,7 @@ import os
 load_dotenv()
 
 # Load trained model
-booster = lgb.Booster(model_file="./models/lgbm_model_percentage_v3.txt")
+booster = lgb.Booster(model_file="./models/lgbm_model_percentage_v4.txt")
 
 
 # Create FastAPI app

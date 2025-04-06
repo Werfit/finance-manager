@@ -45,7 +45,7 @@ export const PredictionBadge: React.FC<PredictionBadgeProps> = ({
             {formatTransactionDate(extractMonth(new Date()))})
           </td>
           <td className="border-b border-l text-sm">
-            {(data?.predictedPercentage ?? 0) * 100}%
+            {((data?.predictedPercentage ?? 0) * 100).toFixed(2)}%
           </td>
         </tr>
         <tr className="*:p-4 *:font-semibold">

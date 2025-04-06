@@ -14,6 +14,7 @@ type PredictionStatistics = {
   totalSpentLast6Months: number;
   totalSpentInCategory: number;
   totalSpentInCategoryInMonth: number;
+  totalSpentInCategoryLastMonth: number;
   totalSpentInCategoryLast3Months: number;
   totalSpentInCategoryLast6Months: number;
   sheetSpendingTrend: number;
@@ -40,7 +41,7 @@ export const fetchPredictionData = async (data: PredictionStatistics) => {
         total_spent_in_sheet_last_3_months: data.totalSpentLast3Months,
         average_spent_in_sheet_last_6_months: data.totalSpentLast6Months,
         sheet_spending_trend: data.sheetSpendingTrend,
-        total_spent_in_category_last_month: data.totalSpentInCategoryInMonth,
+        total_spent_in_category_last_month: data.totalSpentInCategoryLastMonth,
         total_spent_in_category_last_3_months:
           data.totalSpentInCategoryLast3Months,
         average_spent_in_category_last_6_months:
@@ -99,22 +100,22 @@ export const gatherSheetPredictionData = async (
     getSpentInSheetAmountQuery({
       sheetId,
       period: {
-        from: subMonths(new Date(), 1),
-        to: new Date(),
+        from: startOfMonth(subMonths(new Date(), 1)),
+        to: startOfMonth(new Date()),
       },
     }),
     getSpentInSheetAmountQuery({
       sheetId,
       period: {
-        from: subMonths(new Date(), 3),
-        to: new Date(),
+        from: startOfMonth(subMonths(new Date(), 3)),
+        to: startOfMonth(new Date()),
       },
     }),
     getSpentInSheetAmountQuery({
       sheetId,
       period: {
-        from: subMonths(new Date(), 6),
-        to: new Date(),
+        from: startOfMonth(subMonths(new Date(), 6)),
+        to: startOfMonth(new Date()),
       },
     }),
   ]);
@@ -142,24 +143,24 @@ export const gatherSheetPredictionData = async (
       categoryId,
       sheetId,
       period: {
-        from: subMonths(new Date(), 1),
-        to: new Date(),
+        from: startOfMonth(subMonths(new Date(), 1)),
+        to: startOfMonth(new Date()),
       },
     }),
     getSpentInCategoryAmountQuery({
       categoryId,
       sheetId,
       period: {
-        from: subMonths(new Date(), 3),
-        to: new Date(),
+        from: startOfMonth(subMonths(new Date(), 3)),
+        to: startOfMonth(new Date()),
       },
     }),
     getSpentInCategoryAmountQuery({
       categoryId,
       sheetId,
       period: {
-        from: subMonths(new Date(), 6),
-        to: new Date(),
+        from: startOfMonth(subMonths(new Date(), 6)),
+        to: startOfMonth(new Date()),
       },
     }),
   ]);
@@ -187,6 +188,7 @@ export const gatherSheetPredictionData = async (
     totalSpentLast6Months,
     totalSpentInCategory,
     totalSpentInCategoryInMonth,
+    totalSpentInCategoryLastMonth,
     totalSpentInCategoryLast3Months,
     totalSpentInCategoryLast6Months,
     sheetSpendingTrend,

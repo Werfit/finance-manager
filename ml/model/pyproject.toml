@@ -13,4 +13,5 @@ dependencies = [
     "scikit-learn>=1.6.1",
     "shap>=0.47.1",
     "supabase>=2.14.0",
+    "statsmodels>=0.14.1",
 ]
