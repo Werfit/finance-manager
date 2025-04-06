@@ -16,6 +16,14 @@
 | Recent MAE     | 0.0975 |
 | Training Time  | ~2h    |
 
+With Time Series
+
+| Characteristic | Value  |
+| -------------- | ------ |
+| Overall MAE    | 0.0927 |
+| Recent MAE     | 0.0927 |
+| Training Time  | ~2h    |
+
 ### Plan
 
 1. Идея, аналоги итд
